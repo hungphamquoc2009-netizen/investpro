@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <script>
-    var password = prompt("Khu vực nội bộ. Vui lòng nhập mật khẩu:");
-    
-    // Dòng này sẽ in ra chính xác những gì trình duyệt hiểu
-    alert("Bạn vừa nhập vào là: [" + password + "]"); 
-
-    if (password === null || password.trim() !== "a456") { 
-        alert("Sai mật khẩu! Quay về trang chủ.");
-        window.location.href = "index.html"; 
+<script>
+    // Kiểm tra xem trình duyệt đã "nhớ" việc đăng nhập chưa
+    if (sessionStorage.getItem("daDangNhap") !== "thanhcong") {
+        
+        var password = prompt("Khu vực nội bộ. Vui lòng nhập mật khẩu:");
+        
+        // Nếu bấm Hủy hoặc nhập sai
+        if (password === null || password.trim() !== "123456") { 
+            alert("Sai mật khẩu! Quay về trang chủ.");
+            window.location.href = "index.html"; 
+        } else {
+            // Nếu nhập đúng, cấp cho trình duyệt một cái "Thẻ nhớ"
+            sessionStorage.setItem("daDangNhap", "thanhcong");
+        }
     }
-    </script>
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Trị Hệ Thống - ADMIN PRO</title>
