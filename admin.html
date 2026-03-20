@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUẢN TRỊ SIÊU CẤP - INVEST PRO ULTRA</title>
+    <title>QUẢN TRỊ NÂNG CAO - INVEST PRO ULTRA</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #121a8f; --success: #2ecc71; --danger: #e74c3c; --warning: #f39c12; --info: #3498db; --dark: #1a2226; }
@@ -30,6 +30,11 @@
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid #edf2f7; }
         h3 { margin: 0 0 20px 0; font-size: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--primary); }
 
+        /* SEARCH BOX */
+        .search-container { margin-bottom: 15px; display: flex; gap: 10px; }
+        .search-input { flex: 1; padding: 12px 15px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-size: 13px; transition: 0.3s; }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(18, 26, 143, 0.05); }
+
         /* TABLES */
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 14px 15px; text-align: left; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
@@ -42,21 +47,19 @@
         .btn-danger { background: var(--danger); }
         .btn-primary { background: var(--primary); }
         .btn-warning { background: var(--warning); }
-        .btn:active { transform: scale(0.96); }
         
         .user-id { color: var(--primary); font-weight: 800; background: #eef2ff; padding: 3px 8px; border-radius: 6px; font-family: monospace; }
         .order-id { background: #fff7ed; color: #c2410c; padding: 3px 8px; border-radius: 6px; border: 1px solid #ffedd5; font-size: 11px; font-weight: bold; }
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; }
         
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; transition: 0.3s; font-family: inherit; }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(18, 26, 143, 0.05); }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
     <div class="sidebar-header">INVEST PRO PANEL</div>
-    <div class="menu-item active" onclick="showTab('tab-overview', this)">📊 Thống kê & Bank</div>
+    <div class="menu-item active" onclick="showTab('tab-overview', this)">📊 Thống kê & Cấu hình</div>
     <div class="menu-item" onclick="showTab('tab-deposit', this)">📥 Duyệt Nạp Tiền</div>
     <div class="menu-item" onclick="showTab('tab-withdraw', this)">🏧 Duyệt Rút Tiền</div>
     <div class="menu-item" onclick="showTab('tab-users', this)">👥 Thành viên</div>
@@ -70,38 +73,53 @@
             <div class="stat-card"><h4>Thành viên</h4><div id="stat-total-users">0</div></div>
             <div class="stat-card" style="border-bottom-color: var(--success);"><h4>Vốn đã nạp</h4><div id="stat-total-deposited" style="color:var(--success)">0 ₫</div></div>
             <div class="stat-card" style="border-bottom-color: var(--danger);"><h4>Vốn đã rút</h4><div id="stat-total-withdrawn" style="color:var(--danger)">0 ₫</div></div>
-            <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Số dư khách hiện có</h4><div id="stat-total-balance">0 ₫</div></div>
+            <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Số dư ví hiện có</h4><div id="stat-total-balance">0 ₫</div></div>
         </div>
 
         <div class="card">
-            <h3>🏦 Ngân hàng nhận tiền (VietQR)</h3>
+            <h3>⚙️ Cài đặt đường link hệ thống</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="font-size:11px; font-weight:bold; color:#666">🎧 Link Chăm sóc khách hàng (Zalo/Tele hỗ trợ)</label>
+                    <input type="text" id="cfg-cskh" placeholder="Dùng cho nút 'Chăm sóc khách hàng'">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:bold; color:#666">📢 Link Nhóm Chính thức (Hiện ở Popup)</label>
+                    <input type="text" id="cfg-group-link" placeholder="Dùng cho Popup thông báo">
+                </div>
+            </div>
+            <div style="margin-top:20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="font-size:11px; font-weight:bold; color:#666">Tiêu đề Popup</label>
+                    <input type="text" id="cfg-title">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:bold; color:#666">Nội dung thông báo (Mỗi dòng 1 ý)</label>
+                    <textarea id="cfg-content" rows="2"></textarea>
+                </div>
+            </div>
+            <button class="btn btn-success" style="margin-top:20px; padding:12px 30px" onclick="saveSystemConfig()">LƯU CẤU HÌNH HỆ THỐNG</button>
+        </div>
+
+        <div class="card">
+            <h3>🏦 Cấu hình Ngân hàng (VietQR)</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                 <div><label style="font-size:11px; font-weight:bold; color:#666">Mã ngân hàng</label><input type="text" id="bank-id" placeholder="mbbank, vcb..."></div>
                 <div><label style="font-size:11px; font-weight:bold; color:#666">Số tài khoản</label><input type="text" id="bank-stk"></div>
                 <div><label style="font-size:11px; font-weight:bold; color:#666">Tên chủ tài khoản</label><input type="text" id="bank-name"></div>
             </div>
-            <button class="btn btn-primary" style="margin-top:20px; width:200px; padding:12px" onclick="saveBankConfig()">LƯU CẤU HÌNH</button>
-        </div>
-
-        <div class="card">
-            <h3>🎧 Chăm sóc khách hàng & Popup</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div><label style="font-size:11px; font-weight:bold; color:#666">Link CSKH (Zalo/Tele)</label><input type="text" id="cfg-cskh"></div>
-                <div><label style="font-size:11px; font-weight:bold; color:#666">Tiêu đề Popup</label><input type="text" id="cfg-title"></div>
-            </div>
-            <div style="margin-top:15px">
-                <label style="font-size:11px; font-weight:bold; color:#666">Nội dung thông báo</label>
-                <textarea id="cfg-content" rows="3"></textarea>
-            </div>
-            <button class="btn btn-success" style="margin-top:15px; width:200px; padding:12px" onclick="saveSystemConfig()">CẬP NHẬT THÔNG TIN</button>
+            <button class="btn btn-primary" style="margin-top:15px; padding:12px" onclick="saveBankConfig()">LƯU BANK</button>
         </div>
     </div>
 
     <div id="tab-deposit" class="tab-page">
         <div class="card">
-            <h3>📥 Đơn nạp chờ duyệt (Realtime)</h3>
+            <h3>📥 Duyệt nạp tiền (Realtime)</h3>
+            <div class="search-container">
+                <input type="text" class="search-input" id="search-deposit" placeholder="Tìm theo Tên, SĐT, ID hoặc Mã Đơn..." onkeyup="filterTable('deposit-table', this.value)">
+            </div>
             <table>
-                <thead><tr><th>ID</th><th>Khách hàng</th><th>Mã Đơn</th><th>Số tiền</th><th>Thời gian</th><th>Thao tác</th></tr></thead>
+                <thead><tr><th>ID Khách</th><th>Khách hàng</th><th>Mã Đơn</th><th>Số tiền</th><th>Thời gian</th><th>Thao tác</th></tr></thead>
                 <tbody id="deposit-table"></tbody>
             </table>
         </div>
@@ -109,7 +127,10 @@
 
     <div id="tab-withdraw" class="tab-page">
         <div class="card" style="border-top: 5px solid var(--danger);">
-            <h3>🏧 Đơn rút chờ duyệt (Realtime)</h3>
+            <h3>🏧 Duyệt rút tiền (Realtime)</h3>
+            <div class="search-container">
+                <input type="text" class="search-input" id="search-withdraw" placeholder="Tìm theo Tên, SĐT, ID hoặc Mã Đơn..." onkeyup="filterTable('withdraw-table', this.value)">
+            </div>
             <table>
                 <thead><tr><th>Khách hàng</th><th>Số tiền</th><th>Ngân hàng nhận</th><th>Mã Đơn</th><th>Thao tác</th></tr></thead>
                 <tbody id="withdraw-table"></tbody>
@@ -119,7 +140,10 @@
 
     <div id="tab-users" class="tab-page">
         <div class="card">
-            <h3>👥 Quản lý thành viên</h3>
+            <h3>👥 Danh sách thành viên</h3>
+            <div class="search-container">
+                <input type="text" class="search-input" id="search-users" placeholder="Tìm thành viên..." onkeyup="filterTable('user-table', this.value)">
+            </div>
             <table>
                 <thead><tr><th>ID</th><th>Tên / SĐT</th><th>Số dư ví</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
                 <tbody id="user-table"></tbody>
@@ -171,7 +195,7 @@
 
     let currentProducts = [];
 
-    // --- ĐIỀU HƯỚNG TAB ---
+    // ĐIỀU HƯỚNG TAB
     window.showTab = (id, el) => {
         document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
@@ -179,49 +203,56 @@
         el.classList.add('active');
     };
 
-    // --- KHỞI TẠO LẮNG NGHE REALTIME ---
+    // HÀM TÌM KIẾM TRONG BẢNG
+    window.filterTable = (tableId, query) => {
+        const rows = document.getElementById(tableId).getElementsByTagName('tr');
+        const q = query.toLowerCase();
+        for (let row of rows) {
+            row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+        }
+    };
+
+    // KHỞI TẠO LẮNG NGHE REALTIME
     function initRealtime() {
-        // 1. Lắng nghe người dùng & Lịch sử
         onSnapshot(collection(db, "users"), (snap) => {
             let uHtml='', dHtml='', wHtml='', totalU=0, totalB=0, totalD=0, totalW=0;
             
             snap.forEach(docSnap => {
                 const u = docSnap.data();
                 totalU++; totalB += (u.balance || 0);
-
                 const sColor = u.status === 'Đã kích hoạt' ? '#2ecc71' : '#e74c3c';
+
                 uHtml += `<tr><td><span class="user-id">#${u.id}</span></td><td><b>${u.name}</b><br>${u.phone}</td><td><b>${(u.balance||0).toLocaleString()}₫</b></td><td><span class="status-badge" style="background:${sColor}22; color:${sColor}">${u.status}</span></td><td><button class="btn btn-primary" onclick="adjustBal('${u.phone}', ${u.balance})">± Tiền</button></td></tr>`;
 
                 if(u.history) u.history.forEach((h, i) => {
                     const val = Number(h.amount.replace(/[^0-9]/g, ''));
                     const type = (h.type || "").toLowerCase();
-                    
-                    if(h.status === "Thành công") { 
-                        if(type.includes("nạp")) totalD += val; 
-                        if(type.includes("rút")) totalW += val; 
-                    }
+                    if(h.status === "Thành công") { if(type.includes("nạp")) totalD += val; if(type.includes("rút")) totalW += val; }
                     
                     if(h.status === "Chờ duyệt") {
                         if(type.includes("nạp")) {
-                            dHtml += `<tr><td><span class="user-id">#${u.id}</span></td><td><b>${u.name}</b></td><td><span class="order-id">${h.id}</span></td><td style="color:green; font-weight:bold">+${val.toLocaleString()}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${i},'NAP','Thành công')">Duyệt</button></td></tr>`;
+                            dHtml += `<tr><td><span class="user-id">#${u.id}</span></td><td><b>${u.name}</b></td><td><span class="order-id">${h.id}</span></td><td style="color:green; font-weight:bold">${h.amount}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${i},'NAP','Thành công')">Duyệt</button></td></tr>`;
                         } else if(type.includes("rút")) {
-                            wHtml += `<tr><td><b>${u.name}</b><br>${u.phone}</td><td style="color:red; font-weight:bold">-${val.toLocaleString()}</td><td><div style="font-size:11px; color:var(--primary); font-weight:bold">${u.bankInfo}</div></td><td><span class="order-id">${h.id}</span></td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${i},'RUT','Thành công')">Duyệt</button> <button class="btn btn-danger" onclick="processOrder('${u.phone}',${i},'RUT','Bị hủy')">Hủy</button></td></tr>`;
+                            wHtml += `<tr><td><b>${u.name}</b><br>${u.phone}</td><td style="color:red; font-weight:bold">${h.amount}</td><td><div style="font-size:11px; color:var(--primary); font-weight:bold">${u.bankInfo}</div></td><td><span class="order-id">${h.id}</span></td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${i},'RUT','Thành công')">Duyệt</button> <button class="btn btn-danger" onclick="processOrder('${u.phone}',${i},'RUT','Bị hủy')">Hủy</button></td></tr>`;
                         }
                     }
                 });
             });
 
             document.getElementById('user-table').innerHTML = uHtml;
-            document.getElementById('deposit-table').innerHTML = dHtml || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Không có đơn nạp mới.</td></tr>';
-            document.getElementById('withdraw-table').innerHTML = wHtml || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Không có đơn rút mới.</td></tr>';
-            
+            document.getElementById('deposit-table').innerHTML = dHtml || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Không có đơn nạp.</td></tr>';
+            document.getElementById('withdraw-table').innerHTML = wHtml || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Không có đơn rút.</td></tr>';
             document.getElementById('stat-total-users').innerText = totalU;
             document.getElementById('stat-total-balance').innerText = totalB.toLocaleString() + " ₫";
             document.getElementById('stat-total-deposited').innerText = totalD.toLocaleString() + " ₫";
             document.getElementById('stat-total-withdrawn').innerText = totalW.toLocaleString() + " ₫";
+            
+            // Re-apply filters if searching
+            filterTable('user-table', document.getElementById('search-users').value);
+            filterTable('deposit-table', document.getElementById('search-deposit').value);
+            filterTable('withdraw-table', document.getElementById('search-withdraw').value);
         });
 
-        // 2. Lắng nghe Sản phẩm
         onSnapshot(collection(db, "products"), (snap) => {
             let html = ''; currentProducts = [];
             snap.forEach(d => {
@@ -232,7 +263,56 @@
         });
     }
 
-    // --- QUẢN LÝ SẢN PHẨM (SỬA ĐỔI) ---
+    // CẤU HÌNH HỆ THỐNG (TÁCH BIỆT LINK)
+    window.saveSystemConfig = async () => {
+        const cskh = document.getElementById('cfg-cskh').value;
+        const group = document.getElementById('cfg-group-link').value;
+        const title = document.getElementById('cfg-title').value;
+        const content = document.getElementById('cfg-content').value;
+        try {
+            await setDoc(doc(db, "config", "notice"), { cskh, link: group, title, content }, { merge: true });
+            alert("Đã lưu cấu hình CSKH và Nhóm thành công!");
+        } catch(e) { alert(e.message); }
+    };
+
+    // CÁC HÀM XỬ LÝ KHÁC
+    window.processOrder = async (phone, hIndex, type, action) => {
+        if(!confirm(`Xác nhận thực hiện?`)) return;
+        const userRef = doc(db, "users", phone);
+        const snap = await getDoc(userRef);
+        const u = snap.data(); let newHist = [...u.history];
+        const val = Number(newHist[hIndex].amount.replace(/[^0-9]/g, ''));
+        let newBalance = u.balance || 0;
+        if(type === 'NAP' && action === 'Thành công') { newBalance += val; await updateDoc(userRef, { status: "Đã kích hoạt" }); }
+        if(type === 'RUT' && action === 'Bị hủy') { newBalance += val; }
+        newHist[hIndex].status = action; newHist[hIndex].color = action === 'Thành công' ? 'green' : 'red';
+        await updateDoc(userRef, { balance: newBalance, history: newHist });
+        alert("Xong!");
+    };
+
+    window.adjustBal = async (phone, current) => {
+        const amt = prompt("Cộng (+) hoặc Trừ (-) tiền:", "0");
+        if(amt && !isNaN(amt)) {
+            const userRef = doc(db, "users", phone);
+            const userSnap = await getDoc(userRef);
+            let hist = userSnap.data().history || [];
+            if(Number(amt) > 0) hist.unshift({ id: "SYS"+Date.now().toString().slice(-4), type: "Nạp tiền hệ thống", amount: "+" + Number(amt).toLocaleString() + " ₫", time: new Date().toLocaleString(), status: "Thành công", color: "green" });
+            await updateDoc(userRef, { balance: current + Number(amt), history: hist });
+        }
+    };
+
+    window.saveBankConfig = async () => {
+        await setDoc(doc(db, "config", "bank"), { bankId: document.getElementById('bank-id').value, stk: document.getElementById('bank-stk').value, name: document.getElementById('bank-name').value.toUpperCase() });
+        alert("Đã lưu bank!");
+    };
+
+    window.saveProduct = async () => {
+        const idEdit = document.getElementById('p-id-edit').value;
+        const id = idEdit || "PRO" + Date.now();
+        await setDoc(doc(db, "products", id), { id, name: document.getElementById('p-name').value, price: Number(document.getElementById('p-price').value), profit: document.getElementById('p-profit').value, days: document.getElementById('p-days').value, badge: "Phổ biến" });
+        cancelEditProduct();
+    };
+
     window.loadEditProduct = (id) => {
         const p = currentProducts.find(item => item.id === id);
         if(p) {
@@ -241,10 +321,8 @@
             document.getElementById('p-price').value = p.price;
             document.getElementById('p-profit').value = p.profit;
             document.getElementById('p-days').value = p.days;
-
-            document.getElementById('p-form-title').innerText = "⚙️ Chỉnh Sửa Gói: " + p.name;
-            document.getElementById('btn-save-product').innerText = "CẬP NHẬT THAY ĐỔI";
-            document.getElementById('btn-save-product').style.background = "var(--warning)";
+            document.getElementById('p-form-title').innerText = "⚙️ Sửa Gói: " + p.name;
+            document.getElementById('btn-save-product').innerText = "CẬP NHẬT";
             document.getElementById('btn-cancel-product').style.display = "inline-block";
         }
     };
@@ -257,75 +335,20 @@
         document.getElementById('p-days').value = '';
         document.getElementById('p-form-title').innerText = "📦 Quản lý Gói Đầu Tư";
         document.getElementById('btn-save-product').innerText = "THÊM SẢN PHẨM MỚI";
-        document.getElementById('btn-save-product').style.background = "var(--success)";
         document.getElementById('btn-cancel-product').style.display = "none";
     };
 
-    window.saveProduct = async () => {
-        const idEdit = document.getElementById('p-id-edit').value;
-        const name = document.getElementById('p-name').value;
-        const price = document.getElementById('p-price').value;
-        const profit = document.getElementById('p-profit').value;
-        const days = document.getElementById('p-days').value;
-
-        if(!name || !price || !profit) return alert("Vui lòng nhập đủ thông tin!");
-
-        const id = idEdit || "PRO" + Date.now();
-        try {
-            await setDoc(doc(db, "products", id), { id, name, price: Number(price), profit, days, badge: "Phổ biến" });
-            alert("Đã lưu thành công!");
-            cancelEditProduct();
-        } catch(e) { alert(e.message); }
-    };
-
-    window.deleteProduct = async (id) => { if(confirm("Xóa gói đầu tư này?")) await deleteDoc(doc(db, "products", id)); };
-
-    // --- DUYỆT LỆNH ---
-    window.processOrder = async (phone, hIndex, type, action) => {
-        if(!confirm(`Xác nhận thực hiện?`)) return;
-        const userRef = doc(db, "users", phone);
-        const snap = await getDoc(userRef);
-        const u = snap.data(); let newHist = [...u.history];
-        const val = Number(newHist[hIndex].amount.replace(/[^0-9]/g, ''));
-        
-        let newBalance = u.balance || 0;
-        if(type === 'NAP' && action === 'Thành công') { newBalance += val; await updateDoc(userRef, { status: "Đã kích hoạt" }); }
-        if(type === 'RUT' && action === 'Bị hủy') { newBalance += val; }
-
-        newHist[hIndex].status = action;
-        newHist[hIndex].color = action === 'Thành công' ? 'green' : 'red';
-        await updateDoc(userRef, { balance: newBalance, history: newHist });
-        alert("Xong!");
-    };
-
-    // --- CẤU HÌNH ---
-    window.adjustBal = async (phone, current) => {
-        const amt = prompt("Cộng (+) hoặc Trừ (-) tiền khách:", "0");
-        if(amt && !isNaN(amt)) {
-            const userRef = doc(db, "users", phone);
-            const userSnap = await getDoc(userRef);
-            let hist = userSnap.data().history || [];
-            if(Number(amt) > 0) hist.unshift({ id: "SYS"+Date.now().toString().slice(-4), type: "Nạp tiền hệ thống", amount: "+" + Number(amt).toLocaleString() + " ₫", time: new Date().toLocaleString(), status: "Thành công", color: "green" });
-            await updateDoc(userRef, { balance: current + Number(amt), history: hist });
-        }
-    };
-
-    window.saveBankConfig = async () => {
-        await setDoc(doc(db, "config", "bank"), { bankId: document.getElementById('bank-id').value, stk: document.getElementById('bank-stk').value, name: document.getElementById('bank-name').value.toUpperCase() });
-        alert("Đã lưu cấu hình ngân hàng!");
-    };
-
-    window.saveSystemConfig = async () => {
-        const data = { cskh: document.getElementById('cfg-cskh').value, title: document.getElementById('cfg-title').value, content: document.getElementById('cfg-content').value };
-        await setDoc(doc(db, "config", "notice"), data, { merge: true });
-        localStorage.setItem("admin_cskh_link", data.cskh);
-        alert("Đã cập nhật hệ thống!");
-    };
+    window.deleteProduct = async (id) => { if(confirm("Xóa?")) await deleteDoc(doc(db, "products", id)); };
 
     window.onload = async () => {
         initRealtime();
         const b = await getDoc(doc(db, "config", "bank")); if(b.exists()) { document.getElementById('bank-id').value=b.data().bankId; document.getElementById('bank-stk').value=b.data().stk; document.getElementById('bank-name').value=b.data().name; }
-        const n = await getDoc(doc(db, "config", "notice")); if(n.exists()) { document.getElementById('cfg-cskh').value=n.data().cskh; document.getElementById('cfg-title').value=n.data().title; document.getElementById('cfg-content').value=n.data().content; }
+        const n = await getDoc(doc(db, "config", "notice")); if(n.exists()) { 
+            document.getElementById('cfg-cskh').value=n.data().cskh || ''; 
+            document.getElementById('cfg-group-link').value=n.data().link || ''; 
+            document.getElementById('cfg-title').value=n.data().title || ''; 
+            document.getElementById('cfg-content').value=n.data().content || ''; 
+        }
     };
 </script>
 </body>
