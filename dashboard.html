@@ -6,6 +6,7 @@
     <title>INVEST PRO - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        /* GIỮ NGUYÊN TOÀN BỘ CSS CỦA BẠN */
         :root { --primary: #121a8f; --orange: #ff9800; --bg: #f4f7f6; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; color: #1a202c; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 1000; border-top: 1px solid #edf2f7; }
@@ -44,10 +45,6 @@
         .pc-list { display: flex; flex-direction: column; gap: 8px; }
         .pc-row { display: flex; justify-content: space-between; padding: 12px 15px; border: 1px solid #f1f5f9; border-radius: 8px; font-size: 13px; color: #64748b; align-items: center; }
         .pc-row strong { color: #1e293b; font-weight: 800; font-size: 14px; }
-        .pc-estimate { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; }
-        .pc-estimate-title { font-size: 12px; color: #64748b; margin-bottom: 12px; }
-        .pc-est-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #475569; align-items: center; }
-        .pc-est-row strong { color: #10b981; font-weight: 800; font-size: 14px; }
         .pc-btn { width: 100%; background: #6366f1; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
         .pc-btn:active { transform: scale(0.98); background: #4f46e5; }
         .stats-container { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -61,7 +58,8 @@
         .menu-row { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid #f4f4f4; cursor: pointer; font-weight: bold; color: #444; align-items: center; font-size: 14px; }
         .menu-row:last-child { border-bottom: none; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
-        .modal-content { background: white; width: 100%; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-content { background: white; width: 100%; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { transform: translateY(-20px); } to { transform: translateY(0); } }
         .modal-header { background: #df3846; color: white; padding: 15px 20px; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
         .modal-close { cursor: pointer; font-size: 20px; opacity: 0.8; }
         .modal-body { padding: 20px; }
@@ -69,6 +67,12 @@
         .modal-group-title { text-align: center; font-style: italic; font-weight: 800; font-size: 13px; margin: 25px 0 10px 0; color: #333; }
         .modal-link { display: block; text-align: center; color: #1a73e8; text-decoration: underline; font-size: 14px; margin-bottom: 25px; word-break: break-all; }
         .btn-understand { width: 100%; background: #274ebc; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 800; font-size: 15px; cursor: pointer; }
+        
+        /* CSS cho thẻ Input trong Cập nhật thông tin */
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; color: #555; font-weight: bold; margin-bottom: 5px; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; font-family: 'Inter', sans-serif; font-size: 14px; }
+        .input-group input:focus { border-color: var(--primary); }
     </style>
 </head>
 <body>
@@ -80,6 +84,26 @@
                 <span class="modal-close" onclick="closeNotice()">✕</span>
             </div>
             <div class="modal-body" id="popup-body"></div>
+        </div>
+    </div>
+
+    <div id="update-info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--primary);">
+                <span>⚙️ Cập nhật thông tin</span>
+                <span class="modal-close" onclick="closeUpdateModal()">✕</span>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Họ và tên mới:</label>
+                    <input type="text" id="edit-name" placeholder="Nhập họ và tên...">
+                </div>
+                <div class="input-group">
+                    <label>Mật khẩu mới (Để trống nếu không đổi):</label>
+                    <input type="text" id="edit-pass" placeholder="Nhập mật khẩu mới...">
+                </div>
+                <button class="btn-understand" style="margin-top: 10px;" onclick="saveUserInfo()">Lưu Thay Đổi</button>
+            </div>
         </div>
     </div>
 
@@ -134,14 +158,18 @@
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
             <div style="font-size: 35px; background: #f0f3f7; border-radius: 50%; width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; color: #4b238f;">👤</div>
             <div style="flex: 1;">
-                <h2 style="margin: 0 0 5px 0; color: var(--primary); font-size: 18px; font-weight: 800;">
-                    <span id="m-name">...</span> <span id="m-id-me" style="color: #666; font-size: 14px;"></span>
-                </h2>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <h2 style="margin: 0; color: var(--primary); font-size: 18px; font-weight: 800;">
+                        <span id="m-name">...</span> <span id="m-id-me" style="color: #666; font-size: 14px;"></span>
+                    </h2>
+                    <span onclick="openUpdateModal()" style="font-size: 11px; color: #fff; background: var(--orange); padding: 5px 12px; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 2px 5px rgba(255,152,0,0.3);">✎ Cập nhật</span>
+                </div>
+
                 <div id="user-status-badge" style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; display: inline-block;">...</div>
             </div>
         </div>
         <div class="menu-list">
-            <div class="menu-row" onclick="location.href='thong-tin.html'"><span>⚙️ Thông tin & Mật khẩu</span><span>›</span></div>
             <div class="menu-row" onclick="location.href='lien-ket-bank.html'"><span>🏦 Liên kết ngân hàng</span><span id="bank-status" style="font-size: 11px;">Chưa liên kết</span></div>
             <div class="menu-row" onclick="location.href='lich-su-giao-dich.html'"><span>📋 Lịch sử giao dịch</span><span>›</span></div>
             <div class="menu-row" onclick="location.href='ruttien.html'"><span>🏧 Rút tiền về ngân hàng</span><span>›</span></div>
@@ -158,7 +186,7 @@
     <script>
         let profitInterval;
 
-        // TIỆN ÍCH
+        // TIỆN ÍCH CHUNG
         window.closeNotice = () => document.getElementById('notice-modal').style.display = 'none';
         window.logout = () => { localStorage.removeItem('thongTinTaiKhoan'); location.href = 'dang-nhap.html'; };
         window.copyCode = () => { navigator.clipboard.writeText(document.getElementById('m-code').innerText); alert("Đã sao chép!"); };
@@ -171,6 +199,54 @@
             if(id !== 'packages' && profitInterval) clearInterval(profitInterval);
             if(id === 'home') loadNotice();
         };
+
+        // ================= HÀM CẬP NHẬT THÔNG TIN CÁ NHÂN =================
+        window.openUpdateModal = () => {
+            const ss = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
+            const dbUsers = JSON.parse(localStorage.getItem('database_nguoidung')) || [];
+            const user = dbUsers.find(u => u.phone === ss.phone);
+            
+            if(user) {
+                document.getElementById('edit-name').value = user.name;
+                document.getElementById('edit-pass').value = user.password || '';
+                document.getElementById('update-info-modal').style.display = 'flex';
+            }
+        };
+
+        window.closeUpdateModal = () => {
+            document.getElementById('update-info-modal').style.display = 'none';
+        };
+
+        window.saveUserInfo = () => {
+            const newName = document.getElementById('edit-name').value.trim();
+            const newPass = document.getElementById('edit-pass').value.trim();
+
+            if(!newName) return alert("Họ và tên không được để trống!");
+
+            const ss = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
+            let dbUsers = JSON.parse(localStorage.getItem('database_nguoidung')) || [];
+            let userIdx = dbUsers.findIndex(u => u.phone === ss.phone);
+
+            if(userIdx !== -1) {
+                dbUsers[userIdx].name = newName;
+                if(newPass) dbUsers[userIdx].password = newPass;
+
+                localStorage.setItem('database_nguoidung', JSON.stringify(dbUsers));
+
+                // Cập nhật lại Session
+                ss.name = newName;
+                if(newPass) ss.password = newPass;
+                localStorage.setItem('thongTinTaiKhoan', JSON.stringify(ss));
+
+                alert("✅ Đã cập nhật thông tin thành công!");
+                closeUpdateModal();
+                
+                // Cập nhật UI ngay lập tức
+                document.getElementById('m-name').innerText = newName.toUpperCase();
+                document.getElementById('home-greeting').innerText = `Xin chào, ${newName}`;
+            }
+        };
+        // ===================================================================
 
         // TẠO THÔNG BÁO RÚT TIỀN FAKE
         window.generateFakeWithdrawals = () => {
@@ -251,7 +327,7 @@
             }
         };
 
-        // HIỂN THỊ CHI TIẾT GÓI ĐANG CHẠY (REALTIME + 24H)
+        // HIỂN THỊ CHI TIẾT GÓI ĐANG CHẠY
         window.showMyPackages = () => {
             changePage('packages', null);
             const ss = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
@@ -349,7 +425,7 @@
             document.getElementById('m-id-me').innerText = " - #" + (user.id || '0000');
             document.getElementById('m-code').innerText = user.id || '0000';
             
-            // CẬP NHẬT TRẠNG THÁI KÍCH HOẠT (Chưa nạp = đỏ, Đã nạp = xanh)
+            // CẬP NHẬT TRẠNG THÁI KÍCH HOẠT
             const statusBadge = document.getElementById('user-status-badge');
             if (user.status === "Đã kích hoạt") {
                 statusBadge.innerText = "Đã kích hoạt";
