@@ -138,7 +138,9 @@
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
             <div style="font-size: 35px; background: #f0f3f7; border-radius: 50%; width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; color: #4b238f;">👤</div>
             <div style="flex: 1;">
-                <h2 id="m-name" style="margin: 0 0 5px 0; color: var(--primary); font-size: 18px; font-weight: 800;">...</h2>
+                <h2 style="margin: 0 0 5px 0; color: var(--primary); font-size: 18px; font-weight: 800;">
+                    <span id="m-name">...</span> <span id="m-id-me" style="color: #666; font-size: 14px;"></span>
+                </h2>
                 <div id="user-status-badge" style="font-size: 11px; color: #10b981; font-weight: 800; background: #d1fae5; padding: 4px 10px; border-radius: 12px; display: inline-block;">Đã kích hoạt</div>
             </div>
         </div>
@@ -189,6 +191,21 @@
             if(el) el.classList.add('active');
             if(id !== 'packages' && profitInterval) clearInterval(profitInterval);
             if(id === 'home') loadNotice();
+        };
+
+        // 0. TẠO THÔNG BÁO RÚT TIỀN FAKE (Đến 2 Triệu)
+        window.generateFakeWithdrawals = () => {
+            const prefixes = ['032', '033', '034', '035', '036', '037', '038', '039', '096', '097', '098', '086', '091', '094', '083', '084', '085', '081', '082', '070', '079', '077', '076', '078', '089', '090', '093'];
+            let marqueeHtml = '';
+            for (let i = 0; i < 15; i++) {
+                let prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+                let suffix = Math.floor(Math.random() * 900) + 100;
+                // Random số tiền từ 50,000 đến 2,000,000
+                let randomAmount = Math.floor(Math.random() * 196) + 5; 
+                let amount = (randomAmount * 10000).toLocaleString();
+                marqueeHtml += `📢 Thông báo rút: ${prefix}****${suffix} đã rút ${amount} VNĐ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
+            }
+            document.getElementById('marquee-text').innerHTML = marqueeHtml;
         };
 
         // 1. TẢI THÔNG BÁO TỪ ADMIN
@@ -257,7 +274,9 @@
                 if(docSnap.exists()) {
                     currentUser = docSnap.data();
                     document.getElementById('home-greeting').innerText = `Xin chào, ${currentUser.name}`;
-                    document.getElementById('m-name').innerText = currentUser.name;
+                    document.getElementById('m-name').innerText = currentUser.name.toUpperCase();
+                    // Cập nhật ID ở Trang Tôi
+                    document.getElementById('m-id-me').innerText = " - #" + (currentUser.id || '0000');
                     document.getElementById('m-code').innerText = currentUser.id || '0000';
                     document.getElementById('hs-balance').innerText = Number(currentUser.balance).toLocaleString() + " VNĐ";
                     document.getElementById('hs-active-pkg').innerText = (currentUser.investments || []).length;
@@ -301,9 +320,20 @@
             loadProducts();
             loadNotice();
             
-            // Chạy đồng hồ vận hành
+            // Chạy số điện thoại ảo rút tiền
+            window.generateFakeWithdrawals();
+            
+            // Chạy đồng hồ vận hành bằng mốc lưu từ ADMIN (Hoặc 3 ngày trước nếu chưa cài)
             setInterval(() => {
-                const diff = Date.now() - 1710934829000; // Thay bằng mốc thời gian thật
+                let savedTime = localStorage.getItem("admin_start_time");
+                let startTime = savedTime ? new Date(savedTime).getTime() : (Date.now() - 3 * 86400000); 
+                const diff = Date.now() - startTime;
+                
+                if (diff < 0) {
+                    document.getElementById('run-time').innerText = "Chưa vận hành";
+                    return;
+                }
+                
                 const d = Math.floor(diff/86400000);
                 const h = Math.floor((diff%86400000)/3600000);
                 const m = Math.floor((diff%3600000)/60000);
