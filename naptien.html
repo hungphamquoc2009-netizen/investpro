@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thanh Toán QR QuickLink</title>
+    <title>Thanh Toán QR Compact</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; color: #1e293b; display: flex; flex-direction: column; min-height: 100vh; }
@@ -21,10 +21,10 @@
         input { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; text-align: center; font-size: 18px; font-weight: 800; margin-bottom: 20px; outline: none; color: #121a8f; }
         .btn-next { width: 100%; padding: 16px; background: #121a8f; color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 800; cursor: pointer; }
 
-        /* BƯỚC 2: QUICK LINK QR */
+        /* BƯỚC 2: COMPACT QR */
         #payment-info { display: none; text-align: center; }
-        .qr-quicklink-box { background: white; padding: 10px; border-radius: 15px; display: inline-block; margin-bottom: 25px; }
-        #qr-img { width: 260px; height: 260px; display: block; }
+        .qr-compact-box { background: white; padding: 10px; border-radius: 15px; display: inline-block; margin-bottom: 20px; border: 1px solid #f1f5f9; }
+        #qr-img { width: 100%; max-width: 320px; height: auto; display: block; border-radius: 10px; }
         
         .info-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 16px; margin-bottom: 20px; }
         .info-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #edf2f7; }
@@ -33,7 +33,6 @@
         .info-value { font-size: 14px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 5px; }
         
         .copy-tag { background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 6px; font-size: 10px; cursor: pointer; font-weight: 800; }
-
         .btn-confirm { width: 100%; padding: 18px; background: #2ecc71; color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); }
         .btn-back { margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; text-decoration: underline; }
     </style>
@@ -42,7 +41,7 @@
 
     <div class="header">
         <a href="dashboard.html" class="back-btn">❮</a>
-        <b style="font-size: 17px;">Nạp Tiền Qua QR</b>
+        <b style="font-size: 17px;">Nạp Tiền</b>
     </div>
 
     <div class="container">
@@ -56,22 +55,21 @@
                 <div class="amount-item" onclick="selectAmount(5000000, this)">5M</div>
                 <div class="amount-item" onclick="selectAmount(10000000, this)">10M</div>
             </div>
-            <input type="number" id="custom-amount" placeholder="Nhập số tiền...">
+            <input type="number" id="custom-amount" placeholder="Nhập số tiền khác...">
             <button class="btn-next" onclick="goToPayment()">TIẾP THEO</button>
         </div>
 
         <div class="card" id="payment-info">
-            <h3 style="margin-bottom: 5px;">Mã QR Thanh Toán</h3>
-            <p style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 20px;">Mở App ngân hàng để quét mã bên dưới</p>
+            <h3>Quét Mã Chuyển Khoản</h3>
             
-            <div class="qr-quicklink-box">
-                <img id="qr-img" src="" alt="VietQR Quick Link">
+            <div class="qr-compact-box">
+                <img id="qr-img" src="" alt="VietQR Compact">
             </div>
 
             <div class="info-list">
                 <div class="info-item">
                     <span class="info-label">Chủ tài khoản</span>
-                    <span class="info-value" id="disp-name">...</span>
+                    <span class="info-value" id="disp-name" style="text-transform: uppercase;">Đang tải...</span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Số tài khoản</span>
@@ -87,7 +85,7 @@
                 </div>
             </div>
 
-            <button class="btn-confirm" onclick="submitDeposit()">TÔI ĐÃ CHUYỂN KHOẢN XONG</button>
+            <button class="btn-confirm" onclick="submitDeposit()">TÔI ĐÃ CHUYỂN KHOẢN XONG</button>
             <button class="btn-back" onclick="location.reload()">Quay lại chỉnh tiền</button>
         </div>
     </div>
@@ -107,8 +105,18 @@
             const uSnap = await getDoc(doc(db, "users", ss.phone));
             if(uSnap.exists()) currentUser = uSnap.data();
 
+            // CHỈ LẤY TỪ FIREBASE - KHÔNG CÓ THÌ BÁO LỖI
             const cfg = await getDoc(doc(db, "config", "bank"));
-            if(cfg.exists()) adminBank = cfg.data();
+            if(cfg.exists()) {
+                adminBank = cfg.data();
+                document.getElementById('disp-name').innerText = adminBank.name;
+                document.getElementById('disp-stk').innerText = adminBank.stk;
+            } else {
+                // NẾU ADMIN CHƯA CÀI SẼ BÁO LỖI VÀ KHÓA NÚT
+                alert("🔴 LỖI: Hệ thống chưa cấu hình tài khoản nhận tiền. Vui lòng liên hệ Admin!");
+                document.querySelector('.btn-next').disabled = true;
+                document.querySelector('.btn-next').style.background = "#ccc";
+            }
         };
 
         window.selectAmount = (val, el) => {
@@ -121,8 +129,12 @@
         window.goToPayment = () => {
             const inputVal = document.getElementById('custom-amount').value;
             if(inputVal) selectedAmount = Number(inputVal);
-            if(selectedAmount < 30000) return alert("Tối thiểu 30,000₫");
-            if(!adminBank) return alert("Hệ thống đang tải dữ liệu...");
+            if(selectedAmount < 30000) return alert("Số tiền nạp tối thiểu là 30,000₫");
+            
+            // Kiểm tra thông tin bank lần cuối trước khi hiện QR
+            if(!adminBank || !adminBank.name || !adminBank.stk) {
+                return alert("Lỗi: Không tìm thấy thông tin chủ tài khoản trên hệ thống!");
+            }
 
             document.getElementById('step-1').style.display = 'none';
             document.getElementById('payment-info').style.display = 'block';
@@ -133,8 +145,8 @@
             document.getElementById('disp-amt').innerText = selectedAmount.toLocaleString() + "₫";
             document.getElementById('disp-note').innerText = note;
 
-            // QUICK LINK: template qr_only (chỉ lấy mã QR không lấy khung hình)
-            const qrUrl = `https://img.vietqr.io/image/${adminBank.bankId}-${adminBank.stk}-qr_only.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(note)}&accountName=${encodeURIComponent(adminBank.name)}`;
+            // KIỂU COMPACT: template compact.png
+            const qrUrl = `https://img.vietqr.io/image/${adminBank.bankId}-${adminBank.stk}-compact.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(note)}&accountName=${encodeURIComponent(adminBank.name)}`;
             document.getElementById('qr-img').src = qrUrl;
         };
 
@@ -152,7 +164,7 @@
                 const note = "NAP " + (currentUser.id || "0000");
                 hist.unshift({ id: "NAP"+Date.now().toString().slice(-4), type: "Nạp tiền", amount: "+" + selectedAmount.toLocaleString() + " ₫", time: new Date().toLocaleString('vi-VN'), status: "Chờ duyệt", color: "orange", note: note });
                 await updateDoc(userRef, { history: hist });
-                alert("✅ Gửi yêu cầu thành công! Admin sẽ duyệt tiền cho bạn sau 1-5 phút.");
+                alert("✅ Gửi yêu cầu thành công! Admin sẽ duyệt tiền cho bạn ngay.");
                 location.href = "dashboard.html";
             } catch(e) { alert("Lỗi: " + e.message); }
         };
