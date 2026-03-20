@@ -1,50 +1,211 @@
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nạp Tiền - INVEST PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f4f7f6; margin: 0; color: #1a202c; padding-bottom: 30px; }
+        .header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        .back-btn { font-size: 20px; font-weight: bold; margin-right: 15px; cursor: pointer; text-decoration: none; color: #333; }
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
+        
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; }
+        h3 { margin: 0 0 15px 0; font-size: 16px; font-weight: 800; color: #121a8f; }
+        
+        /* CHỌN SỐ TIỀN */
+        .amount-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .amount-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 5px; text-align: center; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.2s; }
+        .amount-item.active { background: #121a8f; color: white; border-color: #121a8f; }
+        
+        .input-group label { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; }
+        .input-group input { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; font-weight: 800; outline: none; transition: 0.3s; }
+        .input-group input:focus { border-color: #121a8f; }
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
-        authDomain: "investpro-data.firebaseapp.com",
-        projectId: "investpro-data",
-        storageBucket: "investpro-data.firebasestorage.app",
-        messagingSenderId: "91038630825",
-        appId: "1:91038630825:web:fba110e17307e1ad4abab8"
-    };
+        /* THÔNG TIN CHUYỂN KHOẢN */
+        #payment-info { display: none; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .qr-box { text-align: center; background: #fff; padding: 15px; border-radius: 12px; border: 2px dashed #121a8f; margin: 15px 0; }
+        .qr-box img { width: 200px; height: 200px; background: #eee; }
+        
+        .bank-details { background: #f0f9ff; padding: 15px; border-radius: 12px; font-size: 14px; line-height: 1.8; }
+        .bank-details div { display: flex; justify-content: space-between; border-bottom: 1px solid #e0f2fe; padding: 5px 0; }
+        .bank-details b { color: #121a8f; }
+        
+        .btn-main { width: 100%; padding: 16px; background: #121a8f; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        .btn-main:active { transform: scale(0.98); }
+        .btn-main:disabled { background: #cbd5e1; cursor: not-allowed; }
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; }
+    </style>
+</head>
+<body>
 
-    window.xacNhanNap = async (amount) => {
-        const rawSS = localStorage.getItem('thongTinTaiKhoan');
-        if(!rawSS) return alert("Vui lòng đăng nhập lại!");
-        const ss = JSON.parse(rawSS);
+    <div id="loading-screen" class="loading-overlay">
+        <div style="width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid #121a8f; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
+        <b>Đang gửi yêu cầu...</b>
+    </div>
+    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
 
-        try {
-            const userRef = doc(db, "users", ss.phone);
-            const userSnap = await getDoc(userRef);
+    <div class="header">
+        <a href="dashboard.html" class="back-btn">❮</a>
+        <b style="font-size: 18px;">Nạp Tiền Vào Tài Khoản</b>
+    </div>
+
+    <div class="container">
+        <div class="card" id="step-1">
+            <h3>Chọn số tiền nạp</h3>
+            <div class="amount-grid">
+                <div class="amount-item" onclick="selectAmount(60000, this)">60,000₫</div>
+                <div class="amount-item" onclick="selectAmount(120000, this)">120,000₫</div>
+                <div class="amount-item" onclick="selectAmount(300000, this)">300,000₫</div>
+                <div class="amount-item" onclick="selectAmount(500000, this)">500,000₫</div>
+                <div class="amount-item" onclick="selectAmount(1000000, this)">1,000,000₫</div>
+                <div class="amount-item" onclick="selectAmount(5000000, this)">5,000,000₫</div>
+            </div>
+            <div class="input-group">
+                <label>Hoặc nhập số tiền khác:</label>
+                <input type="number" id="custom-amount" placeholder="Tối thiểu 60,000₫">
+            </div>
+            <button class="btn-main" onclick="goToPayment()">Tiếp Theo</button>
+        </div>
+
+        <div class="card" id="payment-info">
+            <h3>Thanh toán qua Ngân hàng</h3>
+            <div class="bank-details">
+                <div><span>Ngân hàng:</span> <b id="b-bank">Đang tải...</b></div>
+                <div><span>Số tài khoản:</span> <b id="b-stk">Đang tải...</b></div>
+                <div><span>Chủ tài khoản:</span> <b id="b-name">Đang tải...</b></div>
+                <div><span>Số tiền:</span> <b id="b-amt" style="color: #e74c3c;">0₫</b></div>
+                <div><span>Nội dung ghi chú:</span> <b id="b-note" style="color: #2ecc71;">NAP 0000</b></div>
+            </div>
+
+            <div class="qr-box">
+                <p style="font-size: 12px; margin-top: 0;">Quét mã VietQR để thanh toán nhanh</p>
+                <img id="qr-img" src="" alt="QR Code">
+                <p style="font-size: 11px; color: #64748b; margin-bottom: 0;">(Hệ thống tự động nhận diện sau khi chuyển khoản thành công)</p>
+            </div>
+
+            <button class="btn-main" id="confirm-btn" onclick="submitDeposit()">Tôi Đã Chuyển Khoản</button>
+            <button style="width: 100%; background: none; border: none; color: #64748b; font-size: 13px; margin-top: 15px; cursor: pointer;" onclick="location.reload()">Quay lại chọn số tiền</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
+            authDomain: "investpro-data.firebaseapp.com",
+            projectId: "investpro-data",
+            storageBucket: "investpro-data.firebasestorage.app",
+            messagingSenderId: "91038630825",
+            appId: "1:91038630825:web:fba110e17307e1ad4abab8",
+            measurementId: "G-YBYB26BGKT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let selectedAmount = 0;
+        let currentUser = null;
+
+        // 1. TẢI THÔNG TIN NGÂN HÀNG ADMIN VÀ USER
+        window.onload = async () => {
+            const ssRaw = localStorage.getItem('thongTinTaiKhoan');
+            if(!ssRaw) return location.href="dang-nhap.html";
+            const ss = JSON.parse(ssRaw);
+
+            try {
+                // Lấy thông tin khách hàng
+                const uSnap = await getDoc(doc(db, "users", ss.phone));
+                if(uSnap.exists()) currentUser = uSnap.data();
+
+                // Lấy cấu hình Bank của Admin (Nếu có)
+                const configSnap = await getDoc(doc(db, "config", "bank"));
+                const bankData = configSnap.exists() ? configSnap.data() : {
+                    bankId: "mbbank",
+                    stk: "00003052009", // THAY SỐ TÀI KHOẢN CỦA BẠN VÀO ĐÂY
+                    name: "NGUYEN THE ANH" // THAY TÊN CỦA BẠN VÀO ĐÂY
+                };
+
+                document.getElementById('b-bank').innerText = bankData.bankId.toUpperCase();
+                document.getElementById('b-stk').innerText = bankData.stk;
+                document.getElementById('b-name').innerText = bankData.name;
+                document.getElementById('b-note').innerText = "NAP " + (currentUser.id || "USER");
+
+            } catch(e) { console.log(e); }
+        };
+
+        window.selectAmount = (val, el) => {
+            selectedAmount = val;
+            document.querySelectorAll('.amount-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('custom-amount').value = '';
+        };
+
+        window.goToPayment = () => {
+            const custom = document.getElementById('custom-amount').value;
+            if(custom) selectedAmount = Number(custom);
+
+            if(selectedAmount < 30000) return alert("Số tiền nạp tối thiểu là 30,000₫");
+
+            document.getElementById('step-1').style.display = 'none';
+            document.getElementById('payment-info').style.display = 'block';
+            document.getElementById('b-amt').innerText = selectedAmount.toLocaleString() + "₫";
+
+            // TẠO MÃ VIETQR TỰ ĐỘNG
+            const bankId = document.getElementById('b-bank').innerText.toLowerCase();
+            const stk = document.getElementById('b-stk').innerText;
+            const name = document.getElementById('b-name').innerText;
+            const note = document.getElementById('b-note').innerText;
             
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                const history = userData.history || [];
+            const qrUrl = `https://img.vietqr.io/image/${bankId}-${stk}-compact2.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(note)}&accountName=${encodeURIComponent(name)}`;
+            document.getElementById('qr-img').src = qrUrl;
+        };
+
+        // 2. GỬI LỆNH NẠP LÊN FIREBASE
+        window.submitDeposit = async () => {
+            if(!currentUser) return;
+            
+            document.getElementById('loading-screen').style.display = 'flex';
+            document.getElementById('confirm-btn').disabled = true;
+
+            try {
+                const userRef = doc(db, "users", currentUser.phone);
+                const snap = await getDoc(userRef);
+                const data = snap.data();
                 
-                // TẠO LỆNH NẠP CHUẨN ĐỂ ADMIN ĐỌC ĐƯỢC
+                let history = data.history || [];
+                
+                // CẤU TRÚC LỆNH NẠP CHUẨN ĐỂ ADMIN QUÉT ĐƯỢC
                 const newOrder = {
                     id: "NAP" + Date.now().toString().slice(-6),
-                    type: "Nạp tiền", // Tên phải khớp với admin quét
-                    amount: "+" + Number(amount).toLocaleString() + " ₫",
+                    type: "Nạp tiền", 
+                    amount: "+" + selectedAmount.toLocaleString() + " ₫",
                     time: new Date().toLocaleString('vi-VN'),
                     status: "Chờ duyệt",
                     color: "orange"
                 };
 
                 history.unshift(newOrder);
+
                 await updateDoc(userRef, { history: history });
-                
-                alert("✅ Gửi yêu cầu nạp tiền thành công! Vui lòng chờ Admin duyệt.");
-                window.location.href = "dashboard.html";
+
+                setTimeout(() => {
+                    alert("✅ Gửi yêu cầu nạp tiền thành công! Vui lòng chờ Admin kiểm tra và duyệt tiền.");
+                    window.location.href = "dashboard.html";
+                }, 1000);
+
+            } catch (e) {
+                alert("Lỗi kết nối Firebase: " + e.message);
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('confirm-btn').disabled = false;
             }
-        } catch (e) {
-            alert("Lỗi kết nối: " + e.message);
-        }
-    };
-</script>
+        };
+    </script>
+</body>
+</html>
