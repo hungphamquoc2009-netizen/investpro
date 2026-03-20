@@ -5,33 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nạp Tiền - INVEST PRO</title>
     <style>
+        /* GIỮ NGUYÊN TOÀN BỘ CSS CỦA BẠN */
         :root { --primary: #ff9800; --bg: #f5f5f5; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; }
-        
-        /* Header có nút quay lại nhỏ */
         .header { background: white; padding: 12px 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 100; }
         .back-btn { font-size: 20px; color: #666; text-decoration: none; width: 30px; cursor: pointer; }
         .header-title { flex: 1; text-align: center; font-size: 17px; font-weight: 600; margin-right: 30px; }
-
         .container { padding: 15px; max-width: 500px; margin: auto; }
         h3 { font-size: 15px; margin: 15px 0 10px; color: #333; font-weight: 600; }
-
-        /* Grid mệnh giá từ 50 đến 5.000 */
         .amount-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
         .amount-item { background: white; border: 1px solid #e0e0e0; padding: 12px 0; border-radius: 6px; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .amount-item.active { border-color: var(--primary); color: var(--primary); background: #fff8ef; box-shadow: 0 0 0 1px var(--primary); }
-
-        /* Ô nhập tiền tự do */
         .input-area { background: white; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; margin-bottom: 5px; }
         .input-area input { border: none; outline: none; flex: 1; font-size: 16px; font-weight: bold; color: #333; }
         .input-area input::placeholder { color: #bbb; font-weight: normal; font-size: 14px; }
         .rate-note { font-size: 12px; color: #888; margin-bottom: 20px; }
-
-        /* Nút nạp tiền lớn */
         .btn-submit { width: 100%; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3); }
         .btn-submit:active { transform: scale(0.98); }
-
-        /* Modal QR chuyên nghiệp */
         #qr-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .qr-box { background: white; width: 100%; max-width: 380px; border-radius: 15px; padding: 20px; text-align: center; position: relative; }
         .qr-box img { width: 220px; height: 220px; margin: 15px 0; border: 1px solid #eee; }
@@ -50,14 +40,14 @@
 <div class="container">
     <h3>Số tiền nạp</h3>
     <div class="amount-grid" id="grid">
-        <div class="amount-item" onclick="pick(50)">50</div>
-        <div class="amount-item" onclick="pick(100)">100</div>
-        <div class="amount-item" onclick="pick(200)">200</div>
-        <div class="amount-item" onclick="pick(500)">500</div>
-        <div class="amount-item" onclick="pick(1000)">1,000</div>
-        <div class="amount-item" onclick="pick(2000)">2,000</div>
-        <div class="amount-item" onclick="pick(3000)">3,000</div>
-        <div class="amount-item" onclick="pick(5000)">5,000</div>
+        <div class="amount-item" onclick="pick(50, event)">50</div>
+        <div class="amount-item" onclick="pick(100, event)">100</div>
+        <div class="amount-item" onclick="pick(200, event)">200</div>
+        <div class="amount-item" onclick="pick(500, event)">500</div>
+        <div class="amount-item" onclick="pick(1000, event)">1,000</div>
+        <div class="amount-item" onclick="pick(2000, event)">2,000</div>
+        <div class="amount-item" onclick="pick(3000, event)">3,000</div>
+        <div class="amount-item" onclick="pick(5000, event)">5,000</div>
     </div>
 
     <div class="input-area">
@@ -79,33 +69,50 @@
             <p>Nội dung: <b id="view-desc"></b></p>
             <p style="color:#888; font-size:11px; margin-top:5px;">* Vui lòng chuyển đúng số tiền và nội dung để được duyệt nhanh.</p>
         </div>
-        <button class="btn-done" onclick="submitToAdmin()">Tôi Đã Chuyển Khoản</button>
+        <button class="btn-done" id="btn-final-submit" onclick="submitToAdmin()">Tôi Đã Chuyển Khoản</button>
         <p onclick="closeQR()" style="margin-top:15px; font-size:13px; color:#999; cursor:pointer;">Hủy bỏ</p>
     </div>
 </div>
 
-<script>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
+        authDomain: "investpro-data.firebaseapp.com",
+        projectId: "investpro-data",
+        storageBucket: "investpro-data.firebasestorage.app",
+        messagingSenderId: "91038630825",
+        appId: "1:91038630825:web:fba110e17307e1ad4abab8",
+        measurementId: "G-YBYB26BGKT"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     const session = JSON.parse(localStorage.getItem("thongTinTaiKhoan"));
 
-    function pick(val) {
+    window.pick = function(val, event) {
         document.getElementById('inp-amt').value = val;
-        // Đổi màu nút được chọn
         const items = document.querySelectorAll('.amount-item');
         items.forEach(i => i.classList.remove('active'));
         event.target.classList.add('active');
     }
 
-    function requestNap() {
+    window.requestNap = async function() {
         const val = document.getElementById('inp-amt').value;
-        const cfg = JSON.parse(localStorage.getItem("admin_bank_config"));
-        
-        if(!val || val < 50) return alert("Vui lòng nhập/chọn số tiền tối thiểu 50 (50.000₫)");
-        if(!cfg) return alert("Hệ thống chưa cấu nhận tiền. Vui lòng thử lại sau!");
+        if(!val || val < 50) return alert("Vui lòng nhập số tiền tối thiểu 50!");
+
+        // Lấy cấu hình ngân hàng từ Firebase (Thay vì LocalStorage)
+        const bankSnap = await getDoc(doc(db, "config", "bank"));
+        if(!bankSnap.exists()) return alert("Hệ thống chưa cấu hình ngân hàng nhận tiền!");
+        const cfg = bankSnap.data();
 
         const realMoney = val * 1000;
         const desc = "NAP " + session.phone;
 
-        // Tạo VietQR URL
+        // Tạo VietQR URL chuyên nghiệp
         const qrUrl = `https://img.vietqr.io/image/${cfg.bank}-${cfg.stk}-compact2.png?amount=${realMoney}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent(cfg.name)}`;
         
         document.getElementById("img-qr").src = qrUrl;
@@ -116,16 +123,21 @@
         document.getElementById("qr-overlay").style.display = "flex";
     }
 
-    function closeQR() {
+    window.closeQR = function() {
         document.getElementById("qr-overlay").style.display = "none";
     }
 
-    function submitToAdmin() {
+    window.submitToAdmin = async function() {
+        const btn = document.getElementById("btn-final-submit");
+        btn.disabled = true;
+        btn.innerText = "Đang gửi...";
+
         const val = document.getElementById('inp-amt').value;
         const realMoney = val * 1000;
+        const orderId = "NAP" + Math.floor(Math.random()*900000);
         
-        const order = {
-            orderId: "NAP" + Math.floor(Math.random()*900000),
+        const orderData = {
+            orderId: orderId,
             phone: session.phone,
             userName: session.name,
             amount: Number(realMoney),
@@ -133,12 +145,16 @@
             time: new Date().toLocaleString()
         };
 
-        let list = JSON.parse(localStorage.getItem("database_lenh_nap")) || [];
-        list.push(order);
-        localStorage.setItem("database_lenh_nap", JSON.stringify(list));
-
-        alert("✅ Yêu cầu đã được gửi! Vui lòng chờ Admin duyệt.");
-        window.location.href = "dashboard.html";
+        try {
+            // Gửi lệnh lên Firebase (Bộ sưu tập 'deposits')
+            await setDoc(doc(db, "deposits", orderId), orderData);
+            alert("✅ Yêu cầu đã được gửi! Vui lòng chờ Admin duyệt.");
+            window.location.href = "dashboard.html";
+        } catch (e) {
+            alert("Lỗi kết nối: " + e.message);
+            btn.disabled = false;
+            btn.innerText = "Tôi Đã Chuyển Khoản";
+        }
     }
 </script>
 
