@@ -3,147 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUẢN TRỊ FIREBASE - INVEST PRO</title>
+    <title>Hệ Thống Quản Trị - INVEST PRO ULTRA</title>
     <style>
-        :root { --primary: #121a8f; --success: #2ecc71; --danger: #e74c3c; --warning: #f39c12; --dark: #1a2226; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: #f4f6f9; height: 100vh; overflow: hidden; }
-        .sidebar { width: 220px; background: var(--dark); color: white; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 20px; text-align: center; font-weight: 900; color: var(--success); border-bottom: 1px solid #2c3b41; }
-        .menu-item { padding: 15px; cursor: pointer; transition: 0.3s; font-size: 13px; font-weight: 600; border-left: 4px solid transparent; }
-        .menu-item:hover, .menu-item.active { background: #222d32; border-left-color: var(--success); color: var(--success); }
-        .main { flex: 1; overflow-y: auto; padding: 25px; }
-        .tab-page { display: none; } .tab-page.active { display: block; }
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 15px; border-radius: 10px; border-bottom: 3px solid var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-card h4 { margin: 0; font-size: 11px; color: #666; text-transform: uppercase; }
-        .stat-card div { font-size: 18px; font-weight: 800; margin-top: 8px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        :root { --primary: #121a8f; --success: #2ecc71; --danger: #e74c3c; --warning: #f39c12; --info: #3498db; --dark: #1a2226; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: #f4f6f9; color: #333; height: 100vh; overflow: hidden; }
+        
+        .sidebar { width: 240px; background: var(--dark); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { padding: 25px 20px; text-align: center; font-weight: 900; background: #1e282c; color: var(--success); font-size: 18px; border-bottom: 1px solid #2c3b41; }
+        .menu-item { padding: 15px 20px; cursor: pointer; transition: 0.3s; border-left: 4px solid transparent; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .menu-item:hover, .menu-item.active { background: #222d32; border-left: 4px solid var(--success); color: var(--success); }
+
+        .main { flex: 1; overflow-y: auto; padding: 25px; box-sizing: border-box; }
+        .tab-page { display: none; }
+        .tab-page.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        h3 { margin: 0 0 15px 0; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+
         table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
-        th { background: #f8f9fa; color: #666; }
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px; color: white; }
-        .btn-success { background: var(--success); } .btn-danger { background: var(--danger); } .btn-primary { background: var(--primary); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+        th { background: #f8f9fa; color: #666; font-weight: 600; text-transform: uppercase; font-size: 11px; }
+        
+        .btn { padding: 7px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 11px; color: white; }
+        .btn-success { background: var(--success); box-shadow: 0 2px 6px rgba(46, 204, 113, 0.3); }
+        .btn-danger { background: var(--danger); box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3); }
+        
+        .user-id { color: var(--primary); font-weight: 800; background: #f0f3ff; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+        .order-id { background: #fff7ed; color: #c2410c; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffedd5; font-size: 11px; font-weight: bold; }
+        .phone-sub { color: #888; font-size: 12px; margin-top: 2px; display: block; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="sidebar-header">FIREBASE ADMIN</div>
-    <div class="menu-item active" onclick="showTab('tab-overview', this)">📊 Thống kê & Bank</div>
-    <div class="menu-item" onclick="showTab('tab-deposit', this)">📥 Duyệt Nạp Tiền</div>
-    <div class="menu-item" onclick="showTab('tab-withdraw', this)">🏧 Duyệt Rút Tiền</div>
-    <div class="menu-item" onclick="showTab('tab-users', this)">👥 Quản lý Thành viên</div>
-    <div class="menu-item" onclick="location.reload()" style="margin-top:auto">🔄 Tải lại trang</div>
+    <div class="sidebar-header">INVEST PRO ADMIN</div>
+    <div class="menu-item active">📥 Duyệt Nạp Tiền</div>
+    <div class="menu-item" onclick="location.reload()">🔄 Tải lại dữ liệu</div>
 </div>
 
 <div class="main">
-    <div id="tab-overview" class="tab-page active">
-        <div class="stats-grid">
-            <div class="stat-card"><h4>Thành viên</h4><div id="stat-total-users">0</div></div>
-            <div class="stat-card" style="border-bottom-color: var(--success);"><h4>Vốn đã nạp</h4><div id="stat-total-deposited">0 ₫</div></div>
-            <div class="stat-card" style="border-bottom-color: var(--danger);"><h4>Vốn đã rút</h4><div id="stat-total-withdrawn">0 ₫</div></div>
-            <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Số dư ví khách</h4><div id="stat-total-balance">0 ₫</div></div>
-        </div>
-        <div class="card">
-            <h3>🏦 Cài đặt ngân hàng nhận tiền (VietQR)</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                <input type="text" id="bank-id" placeholder="Mã ngân hàng (vcb, mbbank...)">
-                <input type="text" id="bank-stk" placeholder="Số tài khoản">
-                <input type="text" id="bank-name" placeholder="Tên chủ tài khoản">
-            </div>
-            <button class="btn btn-primary" style="margin-top:15px; padding:10px 30px" onclick="saveBankConfig()">LƯU CẤU HÌNH BANK</button>
-        </div>
-        <div class="card">
-            <h3>🎧 Cài đặt CSKH & Popup</h3>
-            <input type="text" id="cfg-cskh" placeholder="Link Zalo/Telegram hỗ trợ" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
-            <button class="btn btn-success" onclick="saveSystemConfig()">LƯU LINK CSKH</button>
-        </div>
-    </div>
-
-    <div id="tab-deposit" class="tab-page">
-        <div class="card"><h3>📥 Lệnh nạp tiền chờ duyệt</h3>
-        <table><thead><tr><th>Khách hàng</th><th>Số tiền</th><th>Thời gian</th><th>Thao tác</th></tr></thead><tbody id="deposit-table"></tbody></table></div>
-    </div>
-
-    <div id="tab-withdraw" class="tab-page">
-        <div class="card"><h3>🏧 Lệnh rút tiền chờ duyệt</h3>
-        <table><thead><tr><th>Khách hàng</th><th>Số tiền</th><th>Ngân hàng</th><th>Thao tác</th></tr></thead><tbody id="withdraw-table"></tbody></table></div>
-    </div>
-
-    <div id="tab-users" class="tab-page">
-        <div class="card"><h3>👥 Danh sách thành viên</h3>
-        <table><thead><tr><th>Tên/SĐT</th><th>Số dư</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody id="user-table"></tbody></table></div>
+    <div class="card">
+        <h3>📥 Lệnh nạp tiền chờ duyệt chi tiết</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Khách</th>
+                    <th>Khách hàng / SĐT</th>
+                    <th>Mã Đơn Nạp</th>
+                    <th>Số tiền</th>
+                    <th>Thời gian gửi</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="deposit-table">
+                <tr><td colspan="6" style="text-align:center; padding:50px; color:#999;">Đang tải dữ liệu từ mây...</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, collection, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    const firebaseConfig = { apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ", authDomain: "investpro-data.firebaseapp.com", projectId: "investpro-data", storageBucket: "investpro-data.firebasestorage.app", messagingSenderId: "91038630825", appId: "1:91038630825:web:fba110e17307e1ad4abab8" };
-    const app = initializeApp(firebaseConfig); const db = getFirestore(app);
-
-    window.showTab = (id, el) => {
-        document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-        el.classList.add('active');
+    const firebaseConfig = {
+        apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
+        authDomain: "investpro-data.firebaseapp.com",
+        projectId: "investpro-data",
+        storageBucket: "investpro-data.firebasestorage.app",
+        messagingSenderId: "91038630825",
+        appId: "1:91038630825:web:fba110e17307e1ad4abab8",
+        measurementId: "G-YBYB26BGKT"
     };
 
-    function initData() {
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function listenDeposits() {
         onSnapshot(collection(db, "users"), (snap) => {
-            let uHtml='', dHtml='', wHtml='', totalU=0, totalB=0, totalD=0, totalW=0;
+            const dTable = document.getElementById('deposit-table');
+            let html = '';
+            let count = 0;
+
             snap.forEach(docSnap => {
-                const u = docSnap.data(); totalU++; totalB += (u.balance || 0);
-                uHtml += `<tr><td><b>${u.name}</b><br>${u.phone}</td><td>${(u.balance||0).toLocaleString()}₫</td><td>${u.status}</td><td><button class="btn btn-primary" onclick="adjustBal('${u.phone}', ${u.balance})">± Tiền</button></td></tr>`;
-                if(u.history) u.history.forEach((h, i) => {
-                    const val = Number(h.amount.replace(/[^0-9]/g, ''));
-                    if(h.status === "Thành công") { if(h.type.includes("Nạp")) totalD += val; if(h.type.includes("Rút")) totalW += val; }
-                    if(h.status === "Chờ duyệt") {
-                        if(h.type.includes("Nạp")) dHtml += `<tr><td>${u.name}</td><td style="color:green">+${val.toLocaleString()}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${i},'NAP','Thành công')">Duyệt</button></td></tr>`;
-                        if(h.type.includes("Rút")) wHtml += `<tr><td>${u.name}</td><td style="color:red">-${val.toLocaleString()}</td><td>${u.bankInfo}</td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${i},'RUT','Thành công')">Duyệt</button></td></tr>`;
-                    }
-                });
+                const u = docSnap.data();
+                if(u.history && Array.isArray(u.history)) {
+                    u.history.forEach((h, index) => {
+                        // Lọc lệnh nạp đang chờ duyệt
+                        const typeLow = (h.type || "").toLowerCase();
+                        if(h.status === "Chờ duyệt" && typeLow.includes("nạp")) {
+                            count++;
+                            html += `
+                                <tr>
+                                    <td><span class="user-id">#${u.id || '0000'}</span></td>
+                                    <td>
+                                        <b style="font-size:14px;">${u.name || 'Khách'}</b>
+                                        <span class="phone-sub">${u.phone}</span>
+                                    </td>
+                                    <td><span class="order-id">${h.id || 'N/A'}</span></td>
+                                    <td><b style="color:var(--success); font-size:15px;">${h.amount}</b></td>
+                                    <td style="color:#666; font-size:12px;">${h.time}</td>
+                                    <td>
+                                        <button class="btn btn-success" onclick="processOrder('${u.phone}', ${index}, 'Thành công')">Duyệt</button>
+                                        <button class="btn btn-danger" style="margin-left:5px" onclick="processOrder('${u.phone}', ${index}, 'Bị hủy')">Hủy</button>
+                                    </td>
+                                </tr>
+                            `;
+                        }
+                    });
+                }
             });
-            document.getElementById('user-table').innerHTML = uHtml; document.getElementById('deposit-table').innerHTML = dHtml; document.getElementById('withdraw-table').innerHTML = wHtml;
-            document.getElementById('stat-total-users').innerText = totalU; document.getElementById('stat-total-balance').innerText = totalB.toLocaleString() + " ₫";
-            document.getElementById('stat-total-deposited').innerText = totalD.toLocaleString() + " ₫"; document.getElementById('stat-total-withdrawn').innerText = totalW.toLocaleString() + " ₫";
+
+            dTable.innerHTML = count > 0 ? html : '<tr><td colspan="6" style="text-align:center; padding:50px; color:#999;">🎉 Hiện tại không có lệnh nạp nào cần duyệt.</td></tr>';
         });
     }
 
-    window.processOrder = async (phone, hIndex, type, action) => {
-        const userRef = doc(db, "users", phone); const snap = await getDoc(userRef);
-        const u = snap.data(); let newHist = [...u.history]; const val = Number(newHist[hIndex].amount.replace(/[^0-9]/g, ''));
-        if(type==='NAP' && action==='Thành công') await updateDoc(userRef, { balance: (u.balance||0)+val, status: "Đã kích hoạt" });
-        newHist[hIndex].status = action; newHist[hIndex].color = action==='Thành công'?'green':'red';
-        await updateDoc(userRef, { history: newHist }); alert("Xong!");
-    };
+    window.processOrder = async (phone, hIndex, action) => {
+        const msg = action === 'Thành công' ? "DUYỆT" : "HỦY";
+        if(!confirm(`Xác nhận ${msg} lệnh nạp này?`)) return;
 
-    window.adjustBal = async (phone, current) => {
-        const amt = prompt("Nhập số tiền (+/-):", "0");
-        if(amt && !isNaN(amt)) {
-            const userRef = doc(db, "users", phone); const snap = await getDoc(userRef);
-            let hist = snap.data().history || [];
-            if(Number(amt) > 0) hist.unshift({ id: "SYS"+Date.now().toString().slice(-4), type: "Nạp tiền hệ thống", amount: "+" + Number(amt).toLocaleString() + " ₫", time: new Date().toLocaleString(), status: "Thành công", color: "green" });
-            await updateDoc(userRef, { balance: current + Number(amt), history: hist });
+        try {
+            const userRef = doc(db, "users", phone);
+            const snap = await getDoc(userRef);
+            if(snap.exists()){
+                const u = snap.data();
+                let newHist = [...u.history];
+                let newBalance = u.balance || 0;
+
+                // Lấy giá trị số từ chuỗi "+500.000 ₫"
+                const amountVal = Number(newHist[hIndex].amount.replace(/[^0-9]/g, ''));
+
+                if(action === 'Thành công') {
+                    newBalance += amountVal;
+                    await updateDoc(userRef, { 
+                        balance: newBalance,
+                        status: "Đã kích hoạt" 
+                    });
+                }
+
+                newHist[hIndex].status = action;
+                newHist[hIndex].color = action === 'Thành công' ? 'green' : 'red';
+                
+                await updateDoc(userRef, { history: newHist });
+                alert("Đã xử lý thành công!");
+            }
+        } catch(e) {
+            alert("Lỗi: " + e.message);
         }
     };
 
-    window.saveBankConfig = async () => {
-        const data = { bankId: document.getElementById('bank-id').value, stk: document.getElementById('bank-stk').value, name: document.getElementById('bank-name').value };
-        await setDoc(doc(db, "config", "bank"), data); alert("Đã lưu bank!");
-    };
-
-    window.saveSystemConfig = async () => {
-        const link = document.getElementById('cfg-cskh').value;
-        await setDoc(doc(db, "config", "notice"), { cskh: link }, { merge: true });
-        localStorage.setItem("admin_cskh_link", link); alert("Đã lưu CSKH!");
-    };
-
-    window.onload = async () => {
-        initData();
-        const b = await getDoc(doc(db, "config", "bank")); if(b.exists()) { document.getElementById('bank-id').value=b.data().bankId; document.getElementById('bank-stk').value=b.data().stk; document.getElementById('bank-name').value=b.data().name; }
-        const n = await getDoc(doc(db, "config", "notice")); if(n.exists()) document.getElementById('cfg-cskh').value=n.data().cskh;
+    window.onload = () => {
+        listenDeposits();
     };
 </script>
 </body>
