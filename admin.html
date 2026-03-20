@@ -48,7 +48,7 @@
     <div class="menu-item" onclick="showTab('tab-withdraw', this)">🏧 Duyệt Rút Tiền</div>
     <div class="menu-item" onclick="showTab('tab-users', this)">👥 Quản lý Thành viên</div>
     <div class="menu-item" onclick="showTab('tab-products', this)">📦 Quản lý Sản phẩm</div>
-    <div class="menu-item" onclick="location.reload()" style="margin-top: auto; border-top: 1px solid #2c3b41;">🔄 Làm mới dữ liệu</div>
+    <div class="menu-item" onclick="location.reload()" style="margin-top: auto;">🔄 Làm mới dữ liệu</div>
 </div>
 
 <div class="main">
@@ -113,7 +113,7 @@
 
     <div id="tab-products" class="tab-page">
         <div class="card">
-            <h3>📦 Thêm sản phẩm mới</h3>
+            <h3>📦 Quản lý Sản phẩm Đầu tư</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
                 <input type="text" id="p-name" placeholder="Tên gói">
                 <input type="number" id="p-price" placeholder="Giá gói">
@@ -121,9 +121,9 @@
                 <input type="number" id="p-days" placeholder="Số ngày">
                 <button class="btn btn-success" onclick="saveProduct()">Thêm Gói</button>
             </div>
-            <table id="product-table">
+            <table>
                 <thead><tr><th>Tên gói</th><th>Giá</th><th>Lãi/Ngày</th><th>Thao tác</th></tr></thead>
-                <tbody></tbody>
+                <tbody id="product-table-body"></tbody>
             </table>
         </div>
     </div>
@@ -154,36 +154,78 @@
         el.classList.add('active');
     };
 
-    // --- HÀM DUYỆT LỆNH ---
+    // --- HÀM DUYỆT LỆNH NẠP / RÚT ---
     window.processOrder = async (phone, hIndex, type, action) => {
-        if(!confirm(`Xác nhận ${action === 'Thành công' ? 'DUYỆT' : 'HỦY'} lệnh này?`)) return;
-        const userRef = doc(db, "users", phone);
-        const snap = await getDoc(userRef);
-        if(snap.exists()){
-            const u = snap.data();
-            let newHist = [...u.history];
-            let newBalance = u.balance || 0;
-            let newStatus = u.status;
-            const amountVal = Number(newHist[hIndex].amount.replace(/[^0-9]/g, ''));
+        const msg = action === 'Thành công' ? "DUYỆT" : "HỦY";
+        if(!confirm(`Bạn muốn ${msg} lệnh này?`)) return;
 
-            if(type === 'NAP' && action === 'Thành công') {
-                newBalance += amountVal;
-                newStatus = "Đã kích hoạt";
-            } else if (type === 'RUT' && action === 'Bị hủy') {
-                newBalance += amountVal; // Hoàn tiền nếu hủy rút
+        try {
+            const userRef = doc(db, "users", phone);
+            const snap = await getDoc(userRef);
+            if(snap.exists()){
+                const u = snap.data();
+                let newHist = [...u.history];
+                let newBalance = u.balance || 0;
+                let newStatus = u.status;
+
+                const amountVal = Number(newHist[hIndex].amount.replace(/[^0-9]/g, ''));
+
+                if(type === 'NAP' && action === 'Thành công') {
+                    newBalance += amountVal;
+                    newStatus = "Đã kích hoạt";
+                } else if (type === 'RUT' && action === 'Bị hủy') {
+                    newBalance += amountVal; // Hoàn tiền nếu hủy rút
+                }
+
+                newHist[hIndex].status = action;
+                newHist[hIndex].color = action === 'Thành công' ? 'green' : 'red';
+
+                await updateDoc(userRef, { balance: newBalance, history: newHist, status: newStatus });
+                alert("Đã xử lý thành công!");
             }
+        } catch(e) { alert("Lỗi: " + e.message); }
+    };
 
-            newHist[hIndex].status = action;
-            newHist[hIndex].color = action === 'Thành công' ? 'green' : 'red';
-            await updateDoc(userRef, { balance: newBalance, history: newHist, status: newStatus });
-            alert("Đã xử lý xong!");
+    // --- HÀM SỬA TIỀN THỦ CÔNG (CÓ TỰ TẠO LỊCH SỬ) ---
+    window.adjustBalance = async (phone, current) => {
+        const amtStr = prompt("Cộng (+) hoặc Trừ (-) tiền (VD: 50000 để cộng, -50000 để trừ):", "0");
+        const amtValue = Number(amtStr);
+        if(amtStr && !isNaN(amtValue)) {
+            try {
+                const userRef = doc(db, "users", phone);
+                const snap = await getDoc(userRef);
+                if(snap.exists()){
+                    const u = snap.data();
+                    let newHist = u.history || [];
+                    
+                    // Nếu là cộng tiền, tạo dòng lịch sử nạp thành công để tính vào Tổng Vốn
+                    if(amtValue > 0) {
+                        newHist.unshift({
+                            id: "SYS" + Date.now().toString().slice(-5),
+                            type: "Nạp tiền hệ thống",
+                            amount: "+" + amtValue.toLocaleString() + " ₫",
+                            time: new Date().toLocaleString('vi-VN'),
+                            status: "Thành công",
+                            color: "green"
+                        });
+                    }
+
+                    await updateDoc(userRef, { 
+                        balance: current + amtValue, 
+                        history: newHist,
+                        status: "Đã kích hoạt"
+                    });
+                    alert("Đã cập nhật số dư và lịch sử!");
+                }
+            } catch(e) { alert(e.message); }
         }
     };
 
     // --- LẮNG NGHE FIREBASE REALTIME ---
     function initData() {
+        // 1. Lắng nghe người dùng
         onSnapshot(collection(db, "users"), (snap) => {
-            let totalUsers = 0, totalBalance = 0, totalDeposed = 0, totalWithdrawn = 0;
+            let totalUsers = 0, totalBalance = 0, totalDeposited = 0, totalWithdrawn = 0;
             const uTable = document.getElementById('user-table');
             const dTable = document.getElementById('deposit-table');
             const wTable = document.getElementById('withdraw-table');
@@ -201,13 +243,11 @@
                     u.history.forEach((h, index) => {
                         const val = Number(h.amount.replace(/[^0-9]/g, ''));
                         
-                        // Tính toán tổng vốn nạp/rút (Chỉ tính lệnh Thành công)
                         if(h.status === "Thành công") {
-                            if(h.type.includes("Nạp tiền")) totalDeposed += val;
+                            if(h.type.includes("Nạp tiền")) totalDeposited += val;
                             if(h.type.includes("Rút tiền")) totalWithdrawn += val;
                         }
 
-                        // Hiển thị lệnh chờ duyệt
                         if(h.status === "Chờ duyệt") {
                             if(h.type.includes("Nạp tiền")) {
                                 dTable.innerHTML += `<tr><td><b>${u.name}</b><br>${u.phone}</td><td style="color:green; font-weight:bold">+${val.toLocaleString()}₫</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${index},'NAP','Thành công')">Duyệt</button> <button class="btn btn-danger" onclick="processOrder('${u.phone}',${index},'NAP','Bị hủy')">Hủy</button></td></tr>`;
@@ -219,39 +259,36 @@
                 }
             });
 
-            // Cập nhật lên các thẻ thống kê
             document.getElementById('stat-total-users').innerText = totalUsers;
             document.getElementById('stat-total-balance').innerText = totalBalance.toLocaleString() + " ₫";
-            document.getElementById('stat-total-deposited').innerText = totalDeposed.toLocaleString() + " ₫";
+            document.getElementById('stat-total-deposited').innerText = totalDeposited.toLocaleString() + " ₫";
             document.getElementById('stat-total-withdrawn').innerText = totalWithdrawn.toLocaleString() + " ₫";
+            document.getElementById('stat-pending-deposit').innerText = dTable.rows.length;
+            document.getElementById('stat-pending-withdraw').innerText = wTable.rows.length;
         });
 
+        // 2. Lắng nghe sản phẩm
         onSnapshot(collection(db, "products"), (snap) => {
-            const tb = document.querySelector('#product-table tbody');
+            const tb = document.getElementById('product-table-body');
             tb.innerHTML = '';
             snap.forEach(d => {
                 const p = d.data();
-                tb.innerHTML += `<tr><td>${p.name}</td><td>${p.price.toLocaleString()}</td><td>${p.profit}%</td><td><button class="btn btn-danger" onclick="deleteProduct('${p.id}')">Xóa</button></td></tr>`;
+                tb.innerHTML += `<tr><td>${p.name}</td><td>${Number(p.price).toLocaleString()}₫</td><td>${p.profit}%</td><td><button class="btn btn-danger" onclick="deleteProduct('${p.id}')">Xóa</button></td></tr>`;
             });
         });
     }
-
-    window.adjustBalance = async (phone, current) => {
-        const amt = prompt("Cộng (+) hoặc Trừ (-) tiền khách (VD: 50000 hoặc -50000):", "0");
-        if(amt && !isNaN(amt)) await updateDoc(doc(db, "users", phone), { balance: current + Number(amt) });
-    };
 
     window.saveSystemConfig = async () => {
         const data = { title: document.getElementById('cfg-title').value, content: document.getElementById('cfg-content').value, link: document.getElementById('cfg-group-link').value, cskh: document.getElementById('cfg-cskh').value };
         await setDoc(doc(db, "config", "notice"), data);
         localStorage.setItem("admin_cskh_link", data.cskh);
-        alert("Đã cập nhật cấu hình!");
+        alert("Đã lưu!");
     };
 
     window.saveProduct = async () => {
         const id = "PRO" + Date.now();
         await setDoc(doc(db, "products", id), { id, name: document.getElementById('p-name').value, price: Number(document.getElementById('p-price').value), profit: document.getElementById('p-profit').value, days: document.getElementById('p-days').value, badge: "Phổ biến" });
-        alert("Đã thêm gói đầu tư mới!");
+        document.getElementById('p-name').value=''; document.getElementById('p-price').value='';
     };
 
     window.deleteProduct = async (id) => { if(confirm("Xóa gói này?")) await deleteDoc(doc(db, "products", id)); };
