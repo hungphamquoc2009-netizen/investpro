@@ -3,70 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Trị - Firebase Admin</title>
+    <title>Hệ Thống Quản Trị - INVEST PRO ULTRA</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: #f4f6f9; height: 100vh; }
-        .sidebar { width: 260px; background: #1a2226; color: white; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 20px; text-align: center; font-weight: 900; background: #1e282c; color: #2ecc71; border-bottom: 1px solid #222; }
-        .menu-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #222; transition: 0.3s; }
-        .menu-item:hover, .menu-item.active { background: #222d32; border-left: 4px solid #2ecc71; }
-        .main { flex: 1; overflow-y: auto; padding: 25px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        h3 { margin-top: 0; color: #121a8f; border-bottom: 2px solid #f4f6f9; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
-        th { background: #f8f9fa; color: #666; }
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
-        .btn-approve { background: #2ecc71; }
-        .btn-delete { background: #e74c3c; }
-        .btn-save { background: #3498db; padding: 10px 20px; }
-        .input-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-        input, textarea, select { padding: 10px; border: 1px solid #ddd; border-radius: 5px; outline: none; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        :root { --primary: #121a8f; --success: #2ecc71; --danger: #e74c3c; --warning: #f39c12; --dark: #1a2226; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; background: #f4f6f9; color: #333; height: 100vh; overflow: hidden; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 240px; background: var(--dark); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header { padding: 25px 20px; text-align: center; font-weight: 900; background: #1e282c; color: var(--success); font-size: 18px; border-bottom: 1px solid #2c3b41; }
+        .menu-item { padding: 15px 20px; cursor: pointer; transition: 0.3s; border-left: 4px solid transparent; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .menu-item:hover, .menu-item.active { background: #222d32; border-left: 4px solid var(--success); color: var(--success); }
+
+        /* MAIN CONTENT */
+        .main { flex: 1; overflow-y: auto; padding: 25px; box-sizing: border-box; }
+        .tab-page { display: none; }
+        .tab-page.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* STATS CARDS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; border-bottom: 4px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .stat-card h4 { margin: 0; color: #666; font-size: 12px; text-transform: uppercase; }
+        .stat-card div { font-size: 24px; font-weight: 800; margin-top: 10px; color: var(--dark); }
+
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        h3 { margin-top: 0; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+
+        /* TABLE STYLES */
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f8f9fa; color: #666; font-weight: 600; }
+        tr:hover { background: #fcfcfc; }
+
+        /* INPUTS & BUTTONS */
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #555; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; outline: none; font-family: inherit; }
+        input:focus { border-color: var(--primary); }
+        
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 13px; color: white; }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--warning); }
+        .btn-primary { background: var(--primary); }
+        .btn:active { transform: scale(0.95); }
+
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+        .img-preview { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <div class="sidebar-header">FIREBASE ADMIN</div>
-    <div class="menu-item active">💰 Quản Lý Tổng Hợp</div>
-    <div class="menu-item" onclick="location.reload()">🔄 Làm mới trang</div>
+    <div class="sidebar-header">INVEST PRO PANEL</div>
+    <div class="menu-item active" onclick="showTab('tab-overview', this)">📊 Tổng quan & Cấu hình</div>
+    <div class="menu-item" onclick="showTab('tab-withdraw', this)">🏧 Duyệt Rút Tiền</div>
+    <div class="menu-item" onclick="showTab('tab-users', this)">👥 Quản lý Thành viên</div>
+    <div class="menu-item" onclick="showTab('tab-products', this)">📦 Quản lý Sản phẩm</div>
+    <div class="menu-item" onclick="location.reload()" style="margin-top: auto; border-top: 1px solid #2c3b41;">🔄 Làm mới dữ liệu</div>
 </div>
 
 <div class="main">
-    <div class="card" style="border-top: 4px solid #f1c40f;">
-        <h3>📢 Cấu Hình Hệ Thống (Firebase)</h3>
-        <div class="input-group" style="flex-direction: column; align-items: stretch;">
-            <label>Tiêu đề thông báo:</label>
-            <input type="text" id="cfg-title" placeholder="VD: Thông báo bảo trì...">
-            <label>Nội dung thông báo:</label>
-            <textarea id="cfg-content" rows="3" placeholder="Mỗi dòng là một ý..."></textarea>
-            <label>Link CSKH (Zalo/Telegram):</label>
-            <input type="text" id="cfg-cskh" placeholder="https://zalo.me/...">
-            <button class="btn btn-save" style="background: #f39c12; width: 200px;" onclick="saveSystemConfig()">Lưu Cấu Hình</button>
+
+    <div id="tab-overview" class="tab-page active">
+        <div class="stats-grid">
+            <div class="stat-card"><h4>Tổng số thành viên</h4><div id="stat-total-users">0</div></div>
+            <div class="stat-card" style="border-bottom-color: var(--success);"><h4>Tổng vốn người dùng</h4><div id="stat-total-balance">0 ₫</div></div>
+            <div class="stat-card" style="border-bottom-color: var(--warning);"><h4>Lệnh rút chờ duyệt</h4><div id="stat-pending-withdraw">0</div></div>
+        </div>
+
+        <div class="card">
+            <h3>📢 Cấu hình Hệ thống & CSKH</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="input-group">
+                    <label>Tiêu đề Thông báo (Popup)</label>
+                    <input type="text" id="cfg-title">
+                    <label style="margin-top:10px">Nội dung (Mỗi dòng 1 ý)</label>
+                    <textarea id="cfg-content" rows="4"></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Link CSKH (Telegram/Zalo)</label>
+                    <input type="text" id="cfg-cskh" placeholder="https://...">
+                    <label style="margin-top:10px">Link Tham Gia Nhóm (Dưới Popup)</label>
+                    <input type="text" id="cfg-group-link" placeholder="https://...">
+                    <button class="btn btn-primary" style="margin-top: 20px; width: 100%;" onclick="saveSystemConfig()">LƯU TẤT CẢ CẤU HÌNH</button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="card" style="border-top: 4px solid #e67e22;">
-        <h3>🏧 Lệnh Rút Tiền Chờ Duyệt</h3>
-        <table>
-            <thead><tr><th>Khách hàng</th><th>Số tiền</th><th>Thông tin Bank</th><th>Hành động</th></tr></thead>
-            <tbody id="withdraw-table"></tbody>
-        </table>
+    <div id="tab-withdraw" class="tab-page">
+        <div class="card">
+            <h3>🏧 Danh sách lệnh rút chờ duyệt</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Số tiền</th>
+                        <th>Thông tin ngân hàng</th>
+                        <th>Thời gian</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="withdraw-table"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>👥 Danh Sách Thành Viên</h3>
-        <table>
-            <thead><tr><th>ID</th><th>Tên / SĐT</th><th>Số dư</th><th>Trạng thái</th><th>Hành động</th></tr></thead>
-            <tbody id="user-table"></tbody>
-        </table>
+    <div id="tab-users" class="tab-page">
+        <div class="card">
+            <h3>👥 Danh sách thành viên</h3>
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="user-search" placeholder="Tìm theo SĐT hoặc ID..." style="width: 300px;" onkeyup="searchUser()">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên / SĐT</th>
+                        <th>Số dư</th>
+                        <th>Gói chạy</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table"></tbody>
+            </table>
+        </div>
     </div>
+
+    <div id="tab-products" class="tab-page">
+        <div class="card">
+            <h3>📦 Thêm / Sửa Sản Phẩm Đầu Tư</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                <input type="hidden" id="p-id-edit">
+                <input type="text" id="p-name" placeholder="Tên gói">
+                <input type="number" id="p-price" placeholder="Giá gói (VNĐ)">
+                <input type="number" id="p-profit" placeholder="Lãi ngày (%)">
+                <input type="number" id="p-days" placeholder="Thời hạn (Ngày)">
+                <select id="p-badge">
+                    <option value="Phổ biến">Nhãn: Phổ biến</option>
+                    <option value="Cân bằng">Nhãn: Cân bằng</option>
+                    <option value="Lợi nhuận cao">Nhãn: Lợi nhuận cao</option>
+                </select>
+                <button class="btn btn-success" onclick="saveProduct()">Lưu Sản Phẩm</button>
+            </div>
+        </div>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên gói</th>
+                        <th>Giá</th>
+                        <th>Lãi/Ngày</th>
+                        <th>Thời hạn</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="product-table"></tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, onSnapshot, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
@@ -81,57 +184,107 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // --- 1. LƯU CẤU HÌNH (THÔNG BÁO & CSKH) ---
-    window.saveSystemConfig = async () => {
-        const title = document.getElementById('cfg-title').value;
-        const content = document.getElementById('cfg-content').value;
-        const link = document.getElementById('cfg-cskh').value;
-
-        try {
-            // Lưu thông báo vào config/notice
-            await setDoc(doc(db, "config", "notice"), { title, content, link });
-            // Đồng thời lưu link CSKH riêng vào localStorage để dashboard đọc cho nhanh
-            localStorage.setItem("admin_cskh_link", link);
-            alert("Đã cập nhật dữ liệu lên Firebase thành công!");
-        } catch(e) { alert("Lỗi: " + e.message); }
+    // Chuyển Tab
+    window.showTab = (id, el) => {
+        document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+        el.classList.add('active');
     };
 
-    // --- 2. THEO DÕI DANH SÁCH USER VÀ LỆNH RÚT ---
-    function listenData() {
-        // Lắng nghe Users để hiện danh sách và lọc lệnh rút
+    // --- CẤU HÌNH HỆ THỐNG ---
+    window.saveSystemConfig = async () => {
+        const data = {
+            title: document.getElementById('cfg-title').value,
+            content: document.getElementById('cfg-content').value,
+            link: document.getElementById('cfg-group-link').value,
+            cskh: document.getElementById('cfg-cskh').value
+        };
+        try {
+            await setDoc(doc(db, "config", "notice"), data);
+            localStorage.setItem("admin_cskh_link", data.cskh);
+            alert("Đã lưu cấu hình lên Firebase!");
+        } catch(e) { alert(e.message); }
+    };
+
+    // --- QUẢN LÝ SẢN PHẨM ---
+    window.saveProduct = async () => {
+        const id = document.getElementById('p-id-edit').value || "PRO" + Date.now();
+        const data = {
+            id,
+            name: document.getElementById('p-name').value,
+            price: Number(document.getElementById('p-price').value),
+            profit: document.getElementById('p-profit').value,
+            days: document.getElementById('p-days').value,
+            badge: document.getElementById('p-badge').value
+        };
+        await setDoc(doc(db, "products", id), data);
+        alert("Thành công!");
+        document.getElementById('p-name').value = '';
+        document.getElementById('p-price').value = '';
+    };
+
+    window.deleteProduct = async (id) => {
+        if(confirm("Xóa sản phẩm này?")) await deleteDoc(doc(db, "products", id));
+    };
+
+    // --- QUẢN LÝ THÀNH VIÊN & LỆNH RÚT ---
+    function initDataListener() {
+        // Lắng nghe sản phẩm
+        onSnapshot(collection(db, "products"), (snap) => {
+            const tbody = document.getElementById('product-table');
+            tbody.innerHTML = '';
+            snap.forEach(d => {
+                const p = d.data();
+                tbody.innerHTML += `<tr><td>${p.name}</td><td>${p.price.toLocaleString()}</td><td>${p.profit}%</td><td>${p.days}</td>
+                <td><button class="btn btn-danger" onclick="deleteProduct('${p.id}')">Xóa</button></td></tr>`;
+            });
+        });
+
+        // Lắng nghe người dùng
         onSnapshot(collection(db, "users"), (snap) => {
             const userTable = document.getElementById('user-table');
             const withdrawTable = document.getElementById('withdraw-table');
+            let totalBalance = 0, totalUsers = 0, pendingWithdraw = 0;
+
             userTable.innerHTML = '';
             withdrawTable.innerHTML = '';
 
-            snap.forEach((userDoc) => {
-                const u = userDoc.data();
-                
-                // Render bảng thành viên
+            snap.forEach(docSnap => {
+                const u = docSnap.data();
+                totalUsers++;
+                totalBalance += (u.balance || 0);
+
+                // Render User Table
                 const statusColor = u.status === "Đã kích hoạt" ? "#2ecc71" : "#e74c3c";
                 userTable.innerHTML += `
-                    <tr>
+                    <tr class="user-row" data-search="${u.phone} ${u.id} ${u.name}">
                         <td>#${u.id}</td>
                         <td><b>${u.name}</b><br>${u.phone}</td>
-                        <td>${(u.balance || 0).toLocaleString()} ₫</td>
+                        <td><b style="color:var(--primary)">${(u.balance || 0).toLocaleString()} ₫</b></td>
+                        <td>${(u.investments || []).length} gói</td>
                         <td><span class="status-badge" style="background:${statusColor}22; color:${statusColor}">${u.status}</span></td>
-                        <td><button class="btn btn-delete" onclick="deleteUser('${u.phone}')">Xóa</button></td>
+                        <td>
+                            <button class="btn btn-warning" onclick="adjustBalance('${u.phone}', ${u.balance})">Sửa tiền</button>
+                            <button class="btn btn-danger" onclick="toggleLock('${u.phone}', '${u.status}')">${u.status==='Đã Khóa'?'Mở':'Khóa'}</button>
+                        </td>
                     </tr>
                 `;
 
-                // Render lệnh rút (Tìm trong lịch sử của từng user có status "Chờ duyệt")
+                // Scan History for Withdrawals
                 if(u.history) {
                     u.history.forEach((h, index) => {
                         if(h.type.includes("Rút tiền") && h.status === "Chờ duyệt") {
+                            pendingWithdraw++;
                             withdrawTable.innerHTML += `
                                 <tr>
                                     <td><b>${u.name}</b><br>${u.phone}</td>
-                                    <td style="color:red; font-weight:bold">${h.amount}</td>
-                                    <td style="font-size:12px">${u.bankInfo || 'Chưa liên kết'}</td>
+                                    <td style="color:var(--danger); font-weight:bold">${h.amount}</td>
+                                    <td style="font-size:12px; background:#f0f9ff; border-radius:8px;">${u.bankInfo || 'Chưa liên kết'}</td>
+                                    <td style="font-size:11px; color:#888">${h.time}</td>
                                     <td>
-                                        <button class="btn btn-approve" onclick="actionWithdraw('${u.phone}', ${index}, 'Thành công')">Duyệt</button>
-                                        <button class="btn btn-delete" onclick="actionWithdraw('${u.phone}', ${index}, 'Bị hủy')">Từ chối</button>
+                                        <button class="btn btn-success" onclick="actionWithdraw('${u.phone}', ${index}, 'Thành công')">Duyệt</button>
+                                        <button class="btn btn-danger" onclick="actionWithdraw('${u.phone}', ${index}, 'Bị hủy')">Hủy</button>
                                     </td>
                                 </tr>
                             `;
@@ -139,53 +292,63 @@
                     });
                 }
             });
+
+            document.getElementById('stat-total-users').innerText = totalUsers;
+            document.getElementById('stat-total-balance').innerText = totalBalance.toLocaleString() + " ₫";
+            document.getElementById('stat-pending-withdraw').innerText = pendingWithdraw;
         });
     }
 
-    // --- 3. XỬ LÝ LỆNH RÚT ---
-    window.actionWithdraw = async (phone, hIndex, newStatus) => {
-        if(!confirm(`Xác nhận ${newStatus} lệnh này?`)) return;
-        try {
-            const userRef = doc(db, "users", phone);
-            const userSnap = await getDoc(userRef);
-            if(userSnap.exists()) {
-                const userData = userSnap.data();
-                let newHistory = [...userData.history];
-                
-                // Nếu từ chối rút -> Hoàn tiền lại cho khách
-                if(newStatus === "Bị hủy") {
-                    const amountValue = Number(newHistory[hIndex].amount.replace(/[^0-9]/g, ''));
-                    await updateDoc(userRef, { balance: userData.balance + amountValue });
-                }
-
-                newHistory[hIndex].status = newStatus;
-                newHistory[hIndex].color = newStatus === "Thành công" ? "green" : "red";
-                
-                await updateDoc(userRef, { history: newHistory });
-                alert("Đã xử lý lệnh!");
-            }
-        } catch(e) { alert(e.message); }
-    };
-
-    // --- 4. XÓA USER ---
-    window.deleteUser = async (phone) => {
-        if(confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi Firebase?")) {
-            // Lưu ý: Firebase không có hàm xóa doc trực tiếp qua client dễ dàng nếu chưa set rule, 
-            // nhưng ta có thể đánh dấu "Đã khóa"
-            await updateDoc(doc(db, "users", phone), { status: "Đã Khóa" });
-            alert("Đã khóa tài khoản này!");
+    window.adjustBalance = async (phone, current) => {
+        const amount = prompt("Nhập số tiền muốn thay đổi (Ví dụ: 100000 để cộng, -100000 để trừ):", "0");
+        if(amount && !isNaN(amount)) {
+            await updateDoc(doc(db, "users", phone), { balance: current + Number(amount) });
+            alert("Đã cập nhật số dư!");
         }
     };
 
-    // LOAD DỮ LIỆU BAN ĐẦU
+    window.toggleLock = async (phone, status) => {
+        const newStatus = status === "Đã Khóa" ? "Chưa kích hoạt" : "Đã Khóa";
+        await updateDoc(doc(db, "users", phone), { status: newStatus });
+    };
+
+    window.actionWithdraw = async (phone, hIndex, newStatus) => {
+        if(!confirm(`Xác nhận ${newStatus} lệnh rút này?`)) return;
+        const userRef = doc(db, "users", phone);
+        const userSnap = await getDoc(userRef);
+        if(userSnap.exists()) {
+            const u = userSnap.data();
+            let newHist = [...u.history];
+            
+            // Nếu hủy rút -> Trả lại tiền cho khách
+            if(newStatus === "Bị hủy") {
+                const val = Number(newHist[hIndex].amount.replace(/[^0-9]/g, ''));
+                await updateDoc(userRef, { balance: u.balance + val });
+            }
+
+            newHist[hIndex].status = newStatus;
+            newHist[hIndex].color = newStatus === "Thành công" ? "green" : "red";
+            await updateDoc(userRef, { history: newHist });
+            alert("Đã xử lý!");
+        }
+    };
+
+    window.searchUser = () => {
+        const val = document.getElementById('user-search').value.toLowerCase();
+        document.querySelectorAll('.user-row').forEach(tr => {
+            tr.style.display = tr.getAttribute('data-search').toLowerCase().includes(val) ? '' : 'none';
+        });
+    };
+
     window.onload = async () => {
-        listenData();
+        initDataListener();
         const snap = await getDoc(doc(db, "config", "notice"));
         if(snap.exists()) {
             const d = snap.data();
             document.getElementById('cfg-title').value = d.title || '';
             document.getElementById('cfg-content').value = d.content || '';
-            document.getElementById('cfg-cskh').value = d.link || '';
+            document.getElementById('cfg-group-link').value = d.link || '';
+            document.getElementById('cfg-cskh').value = d.cskh || '';
         }
     };
 </script>
