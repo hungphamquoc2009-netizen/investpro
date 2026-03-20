@@ -4,8 +4,10 @@
 <script>
     var password = prompt("Khu vực nội bộ. Vui lòng nhập mật khẩu:");
     
-    // Nếu bấm Hủy (null) hoặc nhập sai (đã tự động xóa dấu cách thừa)
-    if (password === null || password.trim() !== "12312a") { 
+    // Dòng này sẽ in ra chính xác những gì trình duyệt hiểu
+    alert("Bạn vừa nhập vào là: [" + password + "]"); 
+
+    if (password === null || password.trim() !== "123456") { 
         alert("Sai mật khẩu! Quay về trang chủ.");
         window.location.href = "index.html"; 
     }
