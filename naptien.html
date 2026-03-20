@@ -10,50 +10,25 @@
         .header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .back-btn { font-size: 20px; font-weight: bold; margin-right: 15px; cursor: pointer; text-decoration: none; color: #333; }
         .container { padding: 20px; max-width: 500px; margin: 0 auto; }
-        
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; }
         h3 { margin: 0 0 15px 0; font-size: 16px; font-weight: 800; color: #121a8f; }
-        
-        /* CHỌN SỐ TIỀN */
         .amount-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .amount-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 5px; text-align: center; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.2s; }
         .amount-item.active { background: #121a8f; color: white; border-color: #121a8f; }
-        
         .input-group label { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; }
-        .input-group input { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; font-weight: 800; outline: none; transition: 0.3s; }
-        .input-group input:focus { border-color: #121a8f; }
-
-        /* THÔNG TIN CHUYỂN KHOẢN */
+        .input-group input { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; font-weight: 800; outline: none; }
         #payment-info { display: none; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .qr-box { text-align: center; background: #fff; padding: 15px; border-radius: 12px; border: 2px dashed #121a8f; margin: 15px 0; }
-        .qr-box img { width: 200px; height: 200px; background: #eee; }
-        
+        .qr-box img { width: 220px; height: 220px; }
         .bank-details { background: #f0f9ff; padding: 15px; border-radius: 12px; font-size: 14px; line-height: 1.8; }
         .bank-details div { display: flex; justify-content: space-between; border-bottom: 1px solid #e0f2fe; padding: 5px 0; }
         .bank-details b { color: #121a8f; }
-        
-        .btn-main { width: 100%; padding: 16px; background: #121a8f; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 15px; transition: 0.3s; }
-        .btn-main:active { transform: scale(0.98); }
-        .btn-main:disabled { background: #cbd5e1; cursor: not-allowed; }
-
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        .btn-main { width: 100%; padding: 16px; background: #121a8f; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
-
-    <div id="loading-screen" class="loading-overlay">
-        <div style="width: 40px; height: 40px; border: 4px solid #fff; border-top: 4px solid #121a8f; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px;"></div>
-        <b>Đang gửi yêu cầu...</b>
-    </div>
-    <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-
-    <div class="header">
-        <a href="dashboard.html" class="back-btn">❮</a>
-        <b style="font-size: 18px;">Nạp Tiền Vào Tài Khoản</b>
-    </div>
-
+    <div class="header"><a href="dashboard.html" class="back-btn">❮</a><b style="font-size: 18px;">Nạp Tiền Tài Khoản</b></div>
     <div class="container">
         <div class="card" id="step-1">
             <h3>Chọn số tiền nạp</h3>
@@ -67,29 +42,22 @@
             </div>
             <div class="input-group">
                 <label>Hoặc nhập số tiền khác:</label>
-                <input type="number" id="custom-amount" placeholder="Tối thiểu 60,000₫">
+                <input type="number" id="custom-amount" placeholder="Tối thiểu 30,000₫">
             </div>
             <button class="btn-main" onclick="goToPayment()">Tiếp Theo</button>
         </div>
 
         <div class="card" id="payment-info">
-            <h3>Thanh toán qua Ngân hàng</h3>
+            <h3>Quét mã chuyển khoản</h3>
             <div class="bank-details">
                 <div><span>Ngân hàng:</span> <b id="b-bank">Đang tải...</b></div>
                 <div><span>Số tài khoản:</span> <b id="b-stk">Đang tải...</b></div>
                 <div><span>Chủ tài khoản:</span> <b id="b-name">Đang tải...</b></div>
                 <div><span>Số tiền:</span> <b id="b-amt" style="color: #e74c3c;">0₫</b></div>
-                <div><span>Nội dung ghi chú:</span> <b id="b-note" style="color: #2ecc71;">NAP 0000</b></div>
+                <div><span>Nội dung:</span> <b id="b-note" style="color: #2ecc71;">NAP ...</b></div>
             </div>
-
-            <div class="qr-box">
-                <p style="font-size: 12px; margin-top: 0;">Quét mã VietQR để thanh toán nhanh</p>
-                <img id="qr-img" src="" alt="QR Code">
-                <p style="font-size: 11px; color: #64748b; margin-bottom: 0;">(Hệ thống tự động nhận diện sau khi chuyển khoản thành công)</p>
-            </div>
-
+            <div class="qr-box"><img id="qr-img" src="" alt="QR"></div>
             <button class="btn-main" id="confirm-btn" onclick="submitDeposit()">Tôi Đã Chuyển Khoản</button>
-            <button style="width: 100%; background: none; border: none; color: #64748b; font-size: 13px; margin-top: 15px; cursor: pointer;" onclick="location.reload()">Quay lại chọn số tiền</button>
         </div>
     </div>
 
@@ -97,114 +65,54 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
-            authDomain: "investpro-data.firebaseapp.com",
-            projectId: "investpro-data",
-            storageBucket: "investpro-data.firebasestorage.app",
-            messagingSenderId: "91038630825",
-            appId: "1:91038630825:web:fba110e17307e1ad4abab8",
-            measurementId: "G-YBYB26BGKT"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ", authDomain: "investpro-data.firebaseapp.com", projectId: "investpro-data", storageBucket: "investpro-data.firebasestorage.app", messagingSenderId: "91038630825", appId: "1:91038630825:web:fba110e17307e1ad4abab8" };
+        const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        let selectedAmount = 0, currentUser = null;
+        let adminBank = { bankId: "mbbank", stk: "00003052009", name: "NGUYEN THE ANH" }; // Mặc định nếu Firebase trống
 
-        let selectedAmount = 0;
-        let currentUser = null;
-
-        // 1. TẢI THÔNG TIN NGÂN HÀNG ADMIN VÀ USER
         window.onload = async () => {
-            const ssRaw = localStorage.getItem('thongTinTaiKhoan');
-            if(!ssRaw) return location.href="dang-nhap.html";
-            const ss = JSON.parse(ssRaw);
+            const ss = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
+            if(!ss) return location.href="dang-nhap.html";
+            const uSnap = await getDoc(doc(db, "users", ss.phone));
+            if(uSnap.exists()) currentUser = uSnap.data();
 
-            try {
-                // Lấy thông tin khách hàng
-                const uSnap = await getDoc(doc(db, "users", ss.phone));
-                if(uSnap.exists()) currentUser = uSnap.data();
-
-                // Lấy cấu hình Bank của Admin (Nếu có)
-                const configSnap = await getDoc(doc(db, "config", "bank"));
-                const bankData = configSnap.exists() ? configSnap.data() : {
-                    bankId: "mbbank",
-                    stk: "00003052009", // THAY SỐ TÀI KHOẢN CỦA BẠN VÀO ĐÂY
-                    name: "NGUYEN THE ANH" // THAY TÊN CỦA BẠN VÀO ĐÂY
-                };
-
-                document.getElementById('b-bank').innerText = bankData.bankId.toUpperCase();
-                document.getElementById('b-stk').innerText = bankData.stk;
-                document.getElementById('b-name').innerText = bankData.name;
-                document.getElementById('b-note').innerText = "NAP " + (currentUser.id || "USER");
-
-            } catch(e) { console.log(e); }
+            // Lấy bank từ Firebase Admin đã cài
+            const cfg = await getDoc(doc(db, "config", "bank"));
+            if(cfg.exists()) adminBank = cfg.data();
+            
+            document.getElementById('b-bank').innerText = adminBank.bankId.toUpperCase();
+            document.getElementById('b-stk').innerText = adminBank.stk;
+            document.getElementById('b-name').innerText = adminBank.name;
+            document.getElementById('b-note').innerText = "NAP " + (currentUser.id || "0000");
         };
 
         window.selectAmount = (val, el) => {
             selectedAmount = val;
             document.querySelectorAll('.amount-item').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('custom-amount').value = '';
         };
 
         window.goToPayment = () => {
             const custom = document.getElementById('custom-amount').value;
             if(custom) selectedAmount = Number(custom);
-
-            if(selectedAmount < 30000) return alert("Số tiền nạp tối thiểu là 30,000₫");
-
+            if(selectedAmount < 30000) return alert("Tối thiểu 30k!");
             document.getElementById('step-1').style.display = 'none';
             document.getElementById('payment-info').style.display = 'block';
             document.getElementById('b-amt').innerText = selectedAmount.toLocaleString() + "₫";
-
-            // TẠO MÃ VIETQR TỰ ĐỘNG
-            const bankId = document.getElementById('b-bank').innerText.toLowerCase();
-            const stk = document.getElementById('b-stk').innerText;
-            const name = document.getElementById('b-name').innerText;
-            const note = document.getElementById('b-note').innerText;
             
-            const qrUrl = `https://img.vietqr.io/image/${bankId}-${stk}-compact2.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(note)}&accountName=${encodeURIComponent(name)}`;
-            document.getElementById('qr-img').src = qrUrl;
+            const qr = `https://img.vietqr.io/image/${adminBank.bankId}-${adminBank.stk}-compact2.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(document.getElementById('b-note').innerText)}&accountName=${encodeURIComponent(adminBank.name)}`;
+            document.getElementById('qr-img').src = qr;
         };
 
-        // 2. GỬI LỆNH NẠP LÊN FIREBASE
         window.submitDeposit = async () => {
-            if(!currentUser) return;
-            
-            document.getElementById('loading-screen').style.display = 'flex';
-            document.getElementById('confirm-btn').disabled = true;
-
-            try {
-                const userRef = doc(db, "users", currentUser.phone);
-                const snap = await getDoc(userRef);
-                const data = snap.data();
-                
-                let history = data.history || [];
-                
-                // CẤU TRÚC LỆNH NẠP CHUẨN ĐỂ ADMIN QUÉT ĐƯỢC
-                const newOrder = {
-                    id: "NAP" + Date.now().toString().slice(-6),
-                    type: "Nạp tiền", 
-                    amount: "+" + selectedAmount.toLocaleString() + " ₫",
-                    time: new Date().toLocaleString('vi-VN'),
-                    status: "Chờ duyệt",
-                    color: "orange"
-                };
-
-                history.unshift(newOrder);
-
-                await updateDoc(userRef, { history: history });
-
-                setTimeout(() => {
-                    alert("✅ Gửi yêu cầu nạp tiền thành công! Vui lòng chờ Admin kiểm tra và duyệt tiền.");
-                    window.location.href = "dashboard.html";
-                }, 1000);
-
-            } catch (e) {
-                alert("Lỗi kết nối Firebase: " + e.message);
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('confirm-btn').disabled = false;
-            }
+            const userRef = doc(db, "users", currentUser.phone);
+            const userSnap = await getDoc(userRef);
+            let hist = userSnap.data().history || [];
+            hist.unshift({ id: "NAP"+Date.now().toString().slice(-4), type: "Nạp tiền", amount: "+" + selectedAmount.toLocaleString() + " ₫", time: new Date().toLocaleString('vi-VN'), status: "Chờ duyệt", color: "orange" });
+            await updateDoc(userRef, { history: hist });
+            alert("Đã gửi yêu cầu! Chờ Admin duyệt.");
+            location.href = "dashboard.html";
         };
     </script>
 </body>
