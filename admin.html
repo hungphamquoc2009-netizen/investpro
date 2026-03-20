@@ -30,9 +30,9 @@
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid #edf2f7; }
         h3 { margin: 0 0 20px 0; font-size: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--primary); }
 
-        /* SEARCH BOX */
-        .search-container { margin-bottom: 15px; display: flex; gap: 10px; }
-        .search-input { flex: 1; padding: 12px 15px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-size: 13px; transition: 0.3s; }
+        /* THANH TÌM KIẾM */
+        .search-container { margin-bottom: 15px; position: relative; }
+        .search-input { width: 100%; padding: 12px 15px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-size: 13px; box-sizing: border-box; transition: 0.3s; }
         .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(18, 26, 143, 0.05); }
 
         /* TABLES */
@@ -58,7 +58,7 @@
 <body>
 
 <div class="sidebar">
-    <div class="sidebar-header">INVEST PRO PANEL</div>
+    <div class="sidebar-header">INVEST PRO ADMIN</div>
     <div class="menu-item active" onclick="showTab('tab-overview', this)">📊 Thống kê & Cấu hình</div>
     <div class="menu-item" onclick="showTab('tab-deposit', this)">📥 Duyệt Nạp Tiền</div>
     <div class="menu-item" onclick="showTab('tab-withdraw', this)">🏧 Duyệt Rút Tiền</div>
@@ -73,24 +73,24 @@
             <div class="stat-card"><h4>Thành viên</h4><div id="stat-total-users">0</div></div>
             <div class="stat-card" style="border-bottom-color: var(--success);"><h4>Vốn đã nạp</h4><div id="stat-total-deposited" style="color:var(--success)">0 ₫</div></div>
             <div class="stat-card" style="border-bottom-color: var(--danger);"><h4>Vốn đã rút</h4><div id="stat-total-withdrawn" style="color:var(--danger)">0 ₫</div></div>
-            <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Số dư ví hiện có</h4><div id="stat-total-balance">0 ₫</div></div>
+            <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Số dư ví khách</h4><div id="stat-total-balance">0 ₫</div></div>
         </div>
 
         <div class="card">
             <h3>⚙️ Cài đặt đường link hệ thống</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
-                    <label style="font-size:11px; font-weight:bold; color:#666">🎧 Link Chăm sóc khách hàng (Zalo/Tele hỗ trợ)</label>
-                    <input type="text" id="cfg-cskh" placeholder="Dùng cho nút 'Chăm sóc khách hàng'">
+                    <label style="font-size:11px; font-weight:bold; color:#666">🎧 Link Chăm sóc khách hàng (Hỗ trợ cá nhân)</label>
+                    <input type="text" id="cfg-cskh" placeholder="Link Zalo/Tele của Admin">
                 </div>
                 <div>
                     <label style="font-size:11px; font-weight:bold; color:#666">📢 Link Nhóm Chính thức (Hiện ở Popup)</label>
-                    <input type="text" id="cfg-group-link" placeholder="Dùng cho Popup thông báo">
+                    <input type="text" id="cfg-group-link" placeholder="Link nhóm cộng đồng">
                 </div>
             </div>
             <div style="margin-top:20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
-                    <label style="font-size:11px; font-weight:bold; color:#666">Tiêu đề Popup</label>
+                    <label style="font-size:11px; font-weight:bold; color:#666">Tiêu đề Popup Thông báo</label>
                     <input type="text" id="cfg-title">
                 </div>
                 <div>
@@ -98,7 +98,7 @@
                     <textarea id="cfg-content" rows="2"></textarea>
                 </div>
             </div>
-            <button class="btn btn-success" style="margin-top:20px; padding:12px 30px" onclick="saveSystemConfig()">LƯU CẤU HÌNH HỆ THỐNG</button>
+            <button class="btn btn-success" style="margin-top:20px; padding:12px 30px" onclick="saveSystemConfig()">LƯU TẤT CẢ CẤU HÌNH</button>
         </div>
 
         <div class="card">
@@ -114,7 +114,7 @@
 
     <div id="tab-deposit" class="tab-page">
         <div class="card">
-            <h3>📥 Duyệt nạp tiền (Realtime)</h3>
+            <h3>📥 Duyệt nạp tiền (Mới nhất lên đầu)</h3>
             <div class="search-container">
                 <input type="text" class="search-input" id="search-deposit" placeholder="Tìm theo Tên, SĐT, ID hoặc Mã Đơn..." onkeyup="filterTable('deposit-table', this.value)">
             </div>
@@ -127,7 +127,7 @@
 
     <div id="tab-withdraw" class="tab-page">
         <div class="card" style="border-top: 5px solid var(--danger);">
-            <h3>🏧 Duyệt rút tiền (Realtime)</h3>
+            <h3>🏧 Duyệt rút tiền (Mới nhất lên đầu)</h3>
             <div class="search-container">
                 <input type="text" class="search-input" id="search-withdraw" placeholder="Tìm theo Tên, SĐT, ID hoặc Mã Đơn..." onkeyup="filterTable('withdraw-table', this.value)">
             </div>
@@ -162,15 +162,12 @@
                 <div><label style="font-size:11px; font-weight:bold">Ngày hạn</label><input type="number" id="p-days"></div>
             </div>
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button id="btn-save-product" class="btn btn-success" style="padding: 12px 40px" onclick="saveProduct()">THÊM SẢN PHẨM MỚI</button>
+                <button id="btn-save-product" class="btn btn-success" style="padding: 12px 40px" onclick="saveProduct()">LƯU SẢN PHẨM</button>
                 <button id="btn-cancel-product" class="btn btn-warning" style="display:none; padding: 12px 40px" onclick="cancelEditProduct()">HỦY SỬA</button>
             </div>
         </div>
         <div class="card">
-            <table>
-                <thead><tr><th>Tên gói</th><th>Giá gói</th><th>Lãi/Ngày</th><th>Thời hạn</th><th>Thao tác</th></tr></thead>
-                <tbody id="product-list"></tbody>
-            </table>
+            <table><thead><tr><th>Tên gói</th><th>Giá gói</th><th>Lãi/Ngày</th><th>Thời hạn</th><th>Thao tác</th></tr></thead><tbody id="product-list"></tbody></table>
         </div>
     </div>
 
@@ -180,22 +177,11 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, onSnapshot, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
-        authDomain: "investpro-data.firebaseapp.com",
-        projectId: "investpro-data",
-        storageBucket: "investpro-data.firebasestorage.app",
-        messagingSenderId: "91038630825",
-        appId: "1:91038630825:web:fba110e17307e1ad4abab8",
-        measurementId: "G-YBYB26BGKT"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const firebaseConfig = { apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ", authDomain: "investpro-data.firebaseapp.com", projectId: "investpro-data", storageBucket: "investpro-data.firebasestorage.app", messagingSenderId: "91038630825", appId: "1:91038630825:web:fba110e17307e1ad4abab8", measurementId: "G-YBYB26BGKT" };
+    const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
     let currentProducts = [];
 
-    // ĐIỀU HƯỚNG TAB
     window.showTab = (id, el) => {
         document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
@@ -203,7 +189,7 @@
         el.classList.add('active');
     };
 
-    // HÀM TÌM KIẾM TRONG BẢNG
+    // HÀM LỌC TÌM KIẾM
     window.filterTable = (tableId, query) => {
         const rows = document.getElementById(tableId).getElementsByTagName('tr');
         const q = query.toLowerCase();
@@ -212,45 +198,54 @@
         }
     };
 
-    // KHỞI TẠO LẮNG NGHE REALTIME
+    // CHUYỂN THỜI GIAN ĐỂ SẮP XẾP
+    function parseDate(dateStr) {
+        try {
+            const [time, date] = dateStr.split(' ');
+            const [h, m, s] = time.split(':');
+            const [D, M, Y] = date.split('/');
+            return new Date(Y, M - 1, D, h, m, s).getTime();
+        } catch(e) { return 0; }
+    }
+
     function initRealtime() {
         onSnapshot(collection(db, "users"), (snap) => {
-            let uHtml='', dHtml='', wHtml='', totalU=0, totalB=0, totalD=0, totalW=0;
-            
-            snap.forEach(docSnap => {
-                const u = docSnap.data();
-                totalU++; totalB += (u.balance || 0);
-                const sColor = u.status === 'Đã kích hoạt' ? '#2ecc71' : '#e74c3c';
+            let uHtml='', totalU=0, totalB=0, totalD=0, totalW=0;
+            let dList = [], wList = [];
 
+            snap.forEach(docSnap => {
+                const u = docSnap.data(); totalU++; totalB += (u.balance || 0);
+                const sColor = u.status === 'Đã kích hoạt' ? '#2ecc71' : '#e74c3c';
                 uHtml += `<tr><td><span class="user-id">#${u.id}</span></td><td><b>${u.name}</b><br>${u.phone}</td><td><b>${(u.balance||0).toLocaleString()}₫</b></td><td><span class="status-badge" style="background:${sColor}22; color:${sColor}">${u.status}</span></td><td><button class="btn btn-primary" onclick="adjustBal('${u.phone}', ${u.balance})">± Tiền</button></td></tr>`;
 
-                if(u.history) u.history.forEach((h, i) => {
+                if(u.history) u.history.forEach((h) => {
                     const val = Number(h.amount.replace(/[^0-9]/g, ''));
                     const type = (h.type || "").toLowerCase();
                     if(h.status === "Thành công") { if(type.includes("nạp")) totalD += val; if(type.includes("rút")) totalW += val; }
-                    
                     if(h.status === "Chờ duyệt") {
-                        if(type.includes("nạp")) {
-                            dHtml += `<tr><td><span class="user-id">#${u.id}</span></td><td><b>${u.name}</b></td><td><span class="order-id">${h.id}</span></td><td style="color:green; font-weight:bold">${h.amount}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${i},'NAP','Thành công')">Duyệt</button></td></tr>`;
-                        } else if(type.includes("rút")) {
-                            wHtml += `<tr><td><b>${u.name}</b><br>${u.phone}</td><td style="color:red; font-weight:bold">${h.amount}</td><td><div style="font-size:11px; color:var(--primary); font-weight:bold">${u.bankInfo}</div></td><td><span class="order-id">${h.id}</span></td><td><button class="btn btn-success" onclick="processOrder('${u.phone}',${i},'RUT','Thành công')">Duyệt</button> <button class="btn btn-danger" onclick="processOrder('${u.phone}',${i},'RUT','Bị hủy')">Hủy</button></td></tr>`;
-                        }
+                        const item = { ...h, uName: u.name, uPhone: u.phone, uId: u.id, uBank: u.bankInfo, rawTime: parseDate(h.time) };
+                        if(type.includes("nạp")) dList.push(item); else if(type.includes("rút")) wList.push(item);
                     }
                 });
             });
 
+            // SẮP XẾP MỚI NHẤT LÊN ĐẦU
+            dList.sort((a, b) => b.rawTime - a.rawTime);
+            wList.sort((a, b) => b.rawTime - a.rawTime);
+
+            document.getElementById('deposit-table').innerHTML = dList.map(h => `<tr><td><span class="user-id">#${h.uId}</span></td><td><b>${h.uName}</b></td><td><span class="order-id">${h.id}</span></td><td style="color:green; font-weight:bold">${h.amount}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${h.uPhone}','${h.id}','NAP','Thành công')">Duyệt</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
+            document.getElementById('withdraw-table').innerHTML = wList.map(h => `<tr><td><b>${h.uName}</b><br>${h.uPhone}</td><td style="color:red; font-weight:bold">${h.amount}</td><td><div style="font-size:11px; color:var(--primary); font-weight:bold">${h.uBank}</div></td><td><span class="order-id">${h.id}</span></td><td><button class="btn btn-success" onclick="processOrder('${h.uPhone}','${h.id}','RUT','Thành công')">Duyệt</button> <button class="btn btn-danger" onclick="processOrder('${h.uPhone}','${h.id}','RUT','Bị hủy')">Hủy</button></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
             document.getElementById('user-table').innerHTML = uHtml;
-            document.getElementById('deposit-table').innerHTML = dHtml || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Không có đơn nạp.</td></tr>';
-            document.getElementById('withdraw-table').innerHTML = wHtml || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Không có đơn rút.</td></tr>';
+            
             document.getElementById('stat-total-users').innerText = totalU;
             document.getElementById('stat-total-balance').innerText = totalB.toLocaleString() + " ₫";
             document.getElementById('stat-total-deposited').innerText = totalD.toLocaleString() + " ₫";
             document.getElementById('stat-total-withdrawn').innerText = totalW.toLocaleString() + " ₫";
-            
-            // Re-apply filters if searching
-            filterTable('user-table', document.getElementById('search-users').value);
+
+            // GIỮ NGUYÊN BỘ LỌC KHI ĐANG TÌM KIẾM
             filterTable('deposit-table', document.getElementById('search-deposit').value);
             filterTable('withdraw-table', document.getElementById('search-withdraw').value);
+            filterTable('user-table', document.getElementById('search-users').value);
         });
 
         onSnapshot(collection(db, "products"), (snap) => {
@@ -263,31 +258,30 @@
         });
     }
 
-    // CẤU HÌNH HỆ THỐNG (TÁCH BIỆT LINK)
-    window.saveSystemConfig = async () => {
-        const cskh = document.getElementById('cfg-cskh').value;
-        const group = document.getElementById('cfg-group-link').value;
-        const title = document.getElementById('cfg-title').value;
-        const content = document.getElementById('cfg-content').value;
-        try {
-            await setDoc(doc(db, "config", "notice"), { cskh, link: group, title, content }, { merge: true });
-            alert("Đã lưu cấu hình CSKH và Nhóm thành công!");
-        } catch(e) { alert(e.message); }
-    };
-
-    // CÁC HÀM XỬ LÝ KHÁC
-    window.processOrder = async (phone, hIndex, type, action) => {
-        if(!confirm(`Xác nhận thực hiện?`)) return;
+    // XỬ LÝ LỆNH
+    window.processOrder = async (phone, orderId, type, action) => {
+        if(!confirm("Xác nhận?")) return;
         const userRef = doc(db, "users", phone);
         const snap = await getDoc(userRef);
         const u = snap.data(); let newHist = [...u.history];
-        const val = Number(newHist[hIndex].amount.replace(/[^0-9]/g, ''));
+        const hIdx = newHist.findIndex(h => h.id === orderId);
+        if(hIdx === -1) return;
+        const val = Number(newHist[hIdx].amount.replace(/[^0-9]/g, ''));
         let newBalance = u.balance || 0;
         if(type === 'NAP' && action === 'Thành công') { newBalance += val; await updateDoc(userRef, { status: "Đã kích hoạt" }); }
         if(type === 'RUT' && action === 'Bị hủy') { newBalance += val; }
-        newHist[hIndex].status = action; newHist[hIndex].color = action === 'Thành công' ? 'green' : 'red';
+        newHist[hIdx].status = action; newHist[hIdx].color = action === 'Thành công' ? 'green' : 'red';
         await updateDoc(userRef, { balance: newBalance, history: newHist });
         alert("Xong!");
+    };
+
+    window.saveSystemConfig = async () => {
+        const cskh = document.getElementById('cfg-cskh').value;
+        const link = document.getElementById('cfg-group-link').value;
+        const title = document.getElementById('cfg-title').value;
+        const content = document.getElementById('cfg-content').value;
+        await setDoc(doc(db, "config", "notice"), { cskh, link, title, content }, { merge: true });
+        alert("Đã lưu CSKH và Nhóm thành công!");
     };
 
     window.adjustBal = async (phone, current) => {
@@ -296,7 +290,7 @@
             const userRef = doc(db, "users", phone);
             const userSnap = await getDoc(userRef);
             let hist = userSnap.data().history || [];
-            if(Number(amt) > 0) hist.unshift({ id: "SYS"+Date.now().toString().slice(-4), type: "Nạp tiền hệ thống", amount: "+" + Number(amt).toLocaleString() + " ₫", time: new Date().toLocaleString(), status: "Thành công", color: "green" });
+            if(Number(amt) > 0) hist.unshift({ id: "SYS"+Date.now().toString().slice(-4), type: "Nạp tiền hệ thống", amount: "+" + Number(amt).toLocaleString() + " ₫", time: new Date().toLocaleString('vi-VN'), status: "Thành công", color: "green" });
             await updateDoc(userRef, { balance: current + Number(amt), history: hist });
         }
     };
@@ -328,13 +322,9 @@
     };
 
     window.cancelEditProduct = () => {
-        document.getElementById('p-id-edit').value = '';
-        document.getElementById('p-name').value = '';
-        document.getElementById('p-price').value = '';
-        document.getElementById('p-profit').value = '';
-        document.getElementById('p-days').value = '';
+        document.getElementById('p-id-edit').value = ''; document.getElementById('p-name').value = ''; document.getElementById('p-price').value = ''; document.getElementById('p-profit').value = ''; document.getElementById('p-days').value = '';
         document.getElementById('p-form-title').innerText = "📦 Quản lý Gói Đầu Tư";
-        document.getElementById('btn-save-product').innerText = "THÊM SẢN PHẨM MỚI";
+        document.getElementById('btn-save-product').innerText = "LƯU SẢN PHẨM";
         document.getElementById('btn-cancel-product').style.display = "none";
     };
 
@@ -343,11 +333,11 @@
     window.onload = async () => {
         initRealtime();
         const b = await getDoc(doc(db, "config", "bank")); if(b.exists()) { document.getElementById('bank-id').value=b.data().bankId; document.getElementById('bank-stk').value=b.data().stk; document.getElementById('bank-name').value=b.data().name; }
-        const n = await getDoc(doc(db, "config", "notice")); if(n.exists()) { 
-            document.getElementById('cfg-cskh').value=n.data().cskh || ''; 
-            document.getElementById('cfg-group-link').value=n.data().link || ''; 
-            document.getElementById('cfg-title').value=n.data().title || ''; 
-            document.getElementById('cfg-content').value=n.data().content || ''; 
+        const n = await getDoc(doc(db, "config", "notice")); if(n.exists()) {
+            document.getElementById('cfg-cskh').value = n.data().cskh || '';
+            document.getElementById('cfg-group-link').value = n.data().link || '';
+            document.getElementById('cfg-title').value = n.data().title || '';
+            document.getElementById('cfg-content').value = n.data().content || '';
         }
     };
 </script>
