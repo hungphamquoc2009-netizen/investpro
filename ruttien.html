@@ -6,86 +6,94 @@
     <title>Rút Tiền - INVEST PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #121a8f; --orange: #ff9800; --bg: #f4f7f6; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1a202c; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7f6; margin: 0; color: #1a202c; }
+        .header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 10; }
+        .back-btn { font-size: 20px; font-weight: bold; margin-right: 15px; cursor: pointer; color: #333; text-decoration: none; }
+        .container { padding: 20px; max-width: 500px; margin: 0 auto; }
         
-        .header { background: white; padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 100; }
-        .back-btn { font-size: 24px; text-decoration: none; color: #333; margin-right: 15px; cursor: pointer; }
-        h2 { margin: 0; font-size: 18px; font-weight: 800; }
-
-        .container { padding: 20px; max-width: 500px; margin: auto; }
+        .balance-card { background: linear-gradient(135deg, #121a8f, #2b32b2); color: white; padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(18,26,143,0.2); }
+        .balance-card p { margin: 0 0 5px 0; font-size: 13px; opacity: 0.9; }
+        .balance-card h2 { margin: 0; font-size: 28px; font-weight: 800; }
         
-        .balance-card { background: var(--primary); color: white; padding: 20px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(18, 26, 143, 0.2); }
-        .balance-label { font-size: 12px; opacity: 0.8; margin-bottom: 5px; }
-        .balance-value { font-size: 24px; font-weight: 800; }
+        .card { background: white; border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; }
+        
+        /* KHU VỰC HIỂN THỊ NGÂN HÀNG (KHÔNG CHO SỬA) */
+        .bank-info { display: flex; align-items: center; gap: 15px; padding: 15px; background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 12px; margin-bottom: 20px; }
+        .bank-icon { font-size: 24px; background: white; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .bank-details p { margin: 0; font-size: 14px; font-weight: bold; color: #0369a1; }
+        .bank-details span { font-size: 12px; color: #0284c7; font-weight: 600; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; color: #64748b; font-weight: 600; margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 14px 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; font-family: 'Inter', sans-serif; font-weight: bold; color: #1e293b; transition: 0.3s; }
+        .form-group input:focus { border-color: #121a8f; box-shadow: 0 0 0 3px rgba(18,26,143,0.1); }
+        
+        .btn-submit { width: 100%; padding: 16px; background: #121a8f; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 12px rgba(18,26,143,0.2); }
+        .btn-submit:active { transform: scale(0.98); background: #0f172a; }
+        
+        .note { font-size: 12px; color: #64748b; background: #f1f5f9; padding: 15px; border-radius: 10px; margin-top: 20px; line-height: 1.6; }
+        .note ul { margin: 5px 0 0 0; padding-left: 20px; }
 
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 8px; }
-        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 15px; outline: none; background: white; }
-        .form-group input:focus { border-color: var(--primary); }
-
-        .note { background: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 12px; border-radius: 8px; font-size: 12px; line-height: 1.5; margin-bottom: 20px; }
-
-        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; transition: 0.3s; }
-        .btn-submit:active { transform: scale(0.98); opacity: 0.9; }
-        .btn-submit:disabled { background: #cbd5e0; cursor: not-allowed; }
+        /* MÀN HÌNH LOADING "VUI LÒNG CHỜ" */
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; backdrop-filter: blur(3px); }
+        .spinner { width: 45px; height: 45px; border: 5px solid rgba(255,255,255,0.3); border-top: 5px solid #ff9800; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 16px; font-weight: bold; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
+    <div id="loading-screen" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Đang xử lý, vui lòng chờ...</div>
+    </div>
+
     <div class="header">
         <a href="dashboard.html" class="back-btn">❮</a>
-        <h2>Rút Tiền Về Ngân Hàng</h2>
+        <b style="font-size: 18px;">Rút Tiền Về Ngân Hàng</b>
     </div>
 
     <div class="container">
         <div class="balance-card">
-            <div class="balance-label">Số dư khả dụng</div>
-            <div class="balance-value" id="view-balance">0 ₫</div>
+            <p>Số dư khả dụng</p>
+            <h2 id="current-balance">0 ₫</h2>
         </div>
 
-        <div class="note">
-            ⚠️ <b>Lưu ý:</b> Vui lòng kiểm tra kỹ thông tin ngân hàng. Lệnh rút tiền sẽ được xử lý trong vòng 5-30 phút. Phí rút tiền là 0%.
+        <div class="card">
+            <div class="bank-info" id="bank-display">
+                <div class="bank-icon">🏦</div>
+                <div class="bank-details">
+                    <p>Đang tải thông tin...</p>
+                    <span>Vui lòng chờ</span>
+                </div>
+            </div>
+
+            <form id="withdraw-form">
+                <div class="form-group">
+                    <label>Số tiền cần rút (VNĐ)</label>
+                    <input type="number" id="withdraw-amount" placeholder="Ví dụ: 30000, 50000" required>
+                </div>
+                <div class="form-group">
+                    <label>Mật khẩu đăng nhập</label>
+                    <input type="password" id="withdraw-password" placeholder="Nhập mật khẩu để xác minh" required>
+                </div>
+                <button type="submit" class="btn-submit" id="btn-withdraw">Xác Nhận Rút Tiền</button>
+            </form>
+            
+            <div class="note">
+                <b>💡 Lưu ý quan trọng:</b>
+                <ul>
+                    <li>Số tiền rút tối thiểu: <b>30,000 VNĐ</b>.</li>
+                    <li>Chỉ được rút số chẵn theo nghìn (Ví dụ: 30000, 31000... <b>Không nhập số lẻ</b>).</li>
+                    <li>Tiền sẽ được tự động chuyển về thẻ ngân hàng ở trên.</li>
+                </ul>
+            </div>
         </div>
-
-        <form id="withdraw-form">
-            <div class="form-group">
-                <label>Ngân hàng nhận</label>
-                <select id="w-bank" required>
-                    <option value="">-- Chọn ngân hàng --</option>
-                    <option value="Vietcombank">Vietcombank</option>
-                    <option value="MB Bank">MB Bank</option>
-                    <option value="Techcombank">Techcombank</option>
-                    <option value="Viettinbank">Viettinbank</option>
-                    <option value="Agribank">Agribank</option>
-                    <option value="BIDV">BIDV</option>
-                    <option value="TP Bank">TP Bank</option>
-                    <option value="Momo">Ví MoMo</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Số tài khoản</label>
-                <input type="text" id="w-stk" placeholder="Nhập số tài khoản nhận" required>
-            </div>
-
-            <div class="form-group">
-                <label>Tên chủ tài khoản</label>
-                <input type="text" id="w-name" placeholder="Ví dụ: NGUYEN VAN A" required>
-            </div>
-
-            <div class="form-group">
-                <label>Số tiền rút (Tối thiểu 50.000₫)</label>
-                <input type="number" id="w-amount" placeholder="Ví dụ: 100000" required>
-            </div>
-
-            <button type="submit" class="btn-submit" id="btn-withdraw">Gửi Yêu Cầu Rút Tiền</button>
-        </form>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
@@ -93,67 +101,133 @@
             projectId: "investpro-data",
             storageBucket: "investpro-data.firebasestorage.app",
             messagingSenderId: "91038630825",
-            appId: "1:91038630825:web:fba110e17307e1ad4abab8",
-            measurementId: "G-YBYB26BGKT"
+            appId: "1:91038630825:web:fba110e17307e1ad4abab8"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const session = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
-        let currentBalance = 0;
+        let currentUser = null;
 
-        if(!session) { location.href = "dang-nhap.html"; }
-
-        // 1. Tải số dư thực tế từ Firebase
-        async function fetchBalance() {
-            const userSnap = await getDoc(doc(db, "users", session.phone));
-            if(userSnap.exists()) {
-                currentBalance = userSnap.data().balance || 0;
-                document.getElementById('view-balance').innerText = currentBalance.toLocaleString() + " ₫";
-            }
-        }
-        fetchBalance();
-
-        // 2. Xử lý gửi lệnh rút
-        document.getElementById('withdraw-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-withdraw');
-            const amount = Number(document.getElementById('w-amount').value);
-            const bank = document.getElementById('w-bank').value;
-            const stk = document.getElementById('w-stk').value.trim();
-            const name = document.getElementById('w-name').value.trim().toUpperCase();
-
-            // Kiểm tra điều kiện
-            if(amount < 50000) return alert("Số tiền rút tối thiểu là 50.000₫!");
-            if(amount > currentBalance) return alert("Số dư không đủ để thực hiện lệnh rút này!");
-
-            btn.disabled = true;
-            btn.innerText = "Đang gửi yêu cầu...";
-
-            const orderId = "WIT" + Math.floor(Math.random()*900000);
-            const withdrawData = {
-                orderId: orderId,
-                phone: session.phone,
-                userName: session.name,
-                amount: amount,
-                bankInfo: `${bank} | ${stk} | ${name}`,
-                status: "Chờ duyệt",
-                time: new Date().toLocaleString()
-            };
+        // KIỂM TRA ĐĂNG NHẬP VÀ HIỂN THỊ NGÂN HÀNG ĐÃ LIÊN KẾT
+        window.onload = async () => {
+            const rawSS = localStorage.getItem('thongTinTaiKhoan');
+            if(!rawSS) return window.location.href="dang-nhap.html";
+            
+            const ss = JSON.parse(rawSS);
 
             try {
-                // Lưu lệnh rút vào bộ sưu tập "withdraws"
-                await setDoc(doc(db, "withdraws", orderId), withdrawData);
-                
-                alert("✅ Gửi yêu cầu thành công! Admin sẽ duyệt lệnh của bạn sớm nhất.");
-                location.href = "dashboard.html";
+                const userSnap = await getDoc(doc(db, "users", ss.phone));
+                if (userSnap.exists()) {
+                    currentUser = userSnap.data();
+                    
+                    document.getElementById('current-balance').innerText = (currentUser.balance || 0).toLocaleString() + " ₫";
+                    
+                    const bankDisplay = document.getElementById('bank-display');
+                    
+                    // NẾU CHƯA LIÊN KẾT THẺ -> ĐUỔI SANG TRANG LIÊN KẾT
+                    if (!currentUser.bankInfo) {
+                        alert("Bạn chưa liên kết thẻ ngân hàng! Vui lòng liên kết trước khi rút tiền.");
+                        window.location.href = "lien-ket-bank.html";
+                        return;
+                    }
+
+                    // NẾU ĐÃ LIÊN KẾT -> CHỈ HIỆN THÔNG TIN LÊN CHO ĐẸP
+                    const parts = currentUser.bankInfo.split(" - ");
+                    bankDisplay.innerHTML = `
+                        <div class="bank-icon">🏦</div>
+                        <div class="bank-details">
+                            <p>${parts[0]} - ${parts[1]}</p>
+                            <span>Tên chủ thẻ: ${parts[2]}</span>
+                        </div>
+                    `;
+                }
             } catch (err) {
-                alert("Lỗi: " + err.message);
-                btn.disabled = false;
-                btn.innerText = "Gửi Yêu Cầu Rút Tiền";
+                alert("Lỗi tải dữ liệu: " + err.message);
             }
         };
+
+        // XỬ LÝ NÚT RÚT TIỀN
+        document.getElementById('withdraw-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if(!currentUser) return;
+
+            const amountInput = document.getElementById('withdraw-amount').value;
+            const passwordInput = document.getElementById('withdraw-password').value;
+            const amount = Number(amountInput);
+
+            // ==========================================
+            // CÁC ĐIỀU KIỆN RÚT TIỀN CHẶT CHẼ
+            // ==========================================
+            if (!amount || amount < 30000) {
+                return alert("Số tiền rút tối thiểu là 30,000 VNĐ!");
+            }
+
+            if (amount % 1000 !== 0) {
+                return alert("Vui lòng nhập số tròn nghìn (Ví dụ: 30000, 31000... Không nhập 30500).");
+            }
+
+            if (amount > currentUser.balance) {
+                return alert("Số dư của bạn không đủ để thực hiện giao dịch này!");
+            }
+
+            if (passwordInput !== currentUser.password) {
+                return alert("Mật khẩu xác minh không chính xác!");
+            }
+
+            // ==========================================
+            // BẬT MÀN HÌNH "VUI LÒNG CHỜ"
+            // ==========================================
+            document.getElementById('loading-screen').style.display = 'flex';
+
+            try {
+                const newBalance = currentUser.balance - amount;
+                const orderId = "OUT" + Date.now().toString().slice(-6);
+                const timeStr = new Date().toLocaleString('vi-VN');
+
+                // 1. Trừ tiền và ghi lịch sử lên Firebase
+                const historyRecord = {
+                    id: orderId,
+                    type: "Rút tiền về ngân hàng",
+                    amount: "-" + amount.toLocaleString() + " ₫",
+                    time: timeStr,
+                    status: "Chờ duyệt",
+                    color: "orange"
+                };
+
+                let userHistory = currentUser.history || [];
+                userHistory.unshift(historyRecord);
+
+                await updateDoc(doc(db, "users", currentUser.phone), {
+                    balance: newBalance,
+                    history: userHistory
+                });
+
+                // 2. Gửi lệnh cho Admin (Lưu LocalStorage để trang admin.html của bạn đọc được)
+                let adminWithdrawals = JSON.parse(localStorage.getItem('database_lenh_rut')) || [];
+                adminWithdrawals.push({
+                    orderId: orderId,
+                    phone: currentUser.phone,
+                    userName: currentUser.name,
+                    amount: amount,
+                    bankInfo: currentUser.bankInfo,
+                    time: timeStr,
+                    status: "Chờ duyệt"
+                });
+                localStorage.setItem('database_lenh_rut', JSON.stringify(adminWithdrawals));
+
+                // 3. Giữ màn hình chờ 1.5 giây cho giống thật rồi báo thành công
+                setTimeout(() => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    alert("✅ Tạo lệnh rút tiền thành công! Hệ thống đang xử lý, vui lòng chờ.");
+                    window.location.href = "dashboard.html";
+                }, 1500);
+
+            } catch (err) {
+                document.getElementById('loading-screen').style.display = 'none';
+                alert("Đã xảy ra lỗi: " + err.message);
+            }
+        });
     </script>
 </body>
 </html>
