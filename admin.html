@@ -2,17 +2,13 @@
 <html lang="vi">
 <head>
 <script>
-    // Kiểm tra xem trình duyệt đã "nhớ" việc đăng nhập chưa
+    // Ổ KHÓA BẢO MẬT
     if (sessionStorage.getItem("daDangNhap") !== "thanhcong") {
-        
         var password = prompt("Khu vực nội bộ. Vui lòng nhập mật khẩu:");
-        
-        // Nếu bấm Hủy hoặc nhập sai
         if (password === null || password.trim() !== "a456") { 
             alert("Sai mật khẩu! Quay về trang chủ.");
             window.location.href = "index.html"; 
         } else {
-            // Nếu nhập đúng, cấp cho trình duyệt một cái "Thẻ nhớ"
             sessionStorage.setItem("daDangNhap", "thanhcong");
         }
     }
@@ -170,42 +166,58 @@
     <div class="card">
         <h3>👥 Thành Viên Hệ Thống</h3>
         <table>
-            <thead><tr><th>ID</th><th>Tên/SĐT</th><th>Số Dư</th><th>Trạng Thái</th></tr></thead>
+            <thead><tr><th>Số ĐT</th><th>Tên</th><th>Số Dư</th><th>Trạng Thái</th></tr></thead>
             <tbody id="user-table-body"></tbody>
         </table>
     </div>
 </div>
 
-<script>
-    // --- TIỆN ÍCH QUẢN LÝ THÔNG BÁO ---
-    function saveNotice() {
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    // KẾT NỐI FIREBASE CỦA BẠN
+    const firebaseConfig = {
+        apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
+        authDomain: "investpro-data.firebaseapp.com",
+        projectId: "investpro-data",
+        storageBucket: "investpro-data.firebasestorage.app",
+        messagingSenderId: "91038630825",
+        appId: "1:91038630825:web:fba110e17307e1ad4abab8",
+        measurementId: "G-YBYB26BGKT"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // CHUYỂN CÁC HÀM THÀNH GLOBAL ĐỂ HTML GỌI ĐƯỢC
+    window.saveNotice = async function() {
         const title = document.getElementById('n-title').value.trim();
         const content = document.getElementById('n-content').value.trim();
         const link = document.getElementById('n-link').value.trim();
         if (!title || !content) return alert("Vui lòng nhập Tiêu đề và Nội dung!");
-        const notice = { title: title, content: content, link: link, timestamp: Date.now() };
-        localStorage.setItem("admin_notice", JSON.stringify(notice));
-        alert("Đã cập nhật thông báo!");
-    }
-    
-    function loadNotice() {
-        const notice = JSON.parse(localStorage.getItem("admin_notice"));
-        if (notice) {
-            document.getElementById('n-title').value = notice.title;
-            document.getElementById('n-content').value = notice.content;
-            document.getElementById('n-link').value = notice.link || '';
-        }
+        
+        await setDoc(doc(db, "config", "notice"), { title, content, link, timestamp: Date.now() });
+        alert("Đã cập nhật thông báo lên hệ thống!");
     }
 
-    // --- QUẢN LÝ THỜI GIAN HỆ THỐNG ---
-    function saveSystemConfig() {
+    window.saveSystemConfig = async function() {
         const startTime = document.getElementById('sys-start-time').value;
         if(!startTime) return alert("Vui lòng chọn thời gian bắt đầu vận hành!");
-        localStorage.setItem("admin_start_time", startTime);
-        alert("Đã lưu thời gian vận hành! Dashboard sẽ bắt đầu đếm từ mốc này.");
+        await setDoc(doc(db, "config", "system_time"), { startTime });
+        alert("Đã lưu thời gian vận hành lên mây!");
     }
 
-    // --- TIỆN ÍCH ẢNH ---
+    window.saveBankConfig = async function() {
+        const config = { 
+            bank: document.getElementById('bank-id').value.trim(), 
+            stk: document.getElementById('bank-stk').value.trim(), 
+            name: document.getElementById('bank-name').value.toUpperCase().trim() 
+        };
+        await setDoc(doc(db, "config", "bank"), config);
+        alert("Đã lưu cấu hình Ngân hàng lên mây!");
+    }
+
     function getBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -215,8 +227,7 @@
         });
     }
 
-    // --- QUẢN LÝ SẢN PHẨM ---
-    async function addOrUpdateProduct() {
+    window.addOrUpdateProduct = async function() {
         const idEdit = document.getElementById('p-id-edit').value;
         const name = document.getElementById('p-name').value;
         const fileInput = document.getElementById('p-file'); 
@@ -227,54 +238,36 @@
 
         if(!name || !price || !profit) return alert("Vui lòng nhập đủ thông tin!");
 
-        let products = JSON.parse(localStorage.getItem("database_sanpham")) || [];
         let finalImg = "https://via.placeholder.com/300x150.png?text=Invest+Pro";
-
         if (fileInput.files.length > 0) {
             finalImg = await getBase64(fileInput.files[0]);
         } else if (idEdit) {
-            const oldP = products.find(p => p.id === idEdit);
-            finalImg = oldP ? oldP.img : finalImg;
+            const oldDoc = await getDoc(doc(db, "products", idEdit));
+            if(oldDoc.exists()) finalImg = oldDoc.data().img;
         }
 
         const profitString = profit.toString().includes('%') ? profit : profit + "%";
+        const productId = idEdit ? idEdit : "PRO" + Date.now();
 
-        if(idEdit) {
-            const index = products.findIndex(p => p.id === idEdit);
-            products[index] = { id: idEdit, name, img: finalImg, price: Number(price), profit: profitString, days: Number(days), badge: badge };
-            alert("Cập nhật sản phẩm thành công!");
-        } else {
-            products.push({ id: "PRO" + Date.now(), name, img: finalImg, price: Number(price), profit: profitString, days: Number(days), badge: badge });
-            alert("Thêm sản phẩm thành công!");
-        }
+        await setDoc(doc(db, "products", productId), {
+            id: productId, name, img: finalImg, price: Number(price), profit: profitString, days: Number(days), badge: badge
+        });
 
-        localStorage.setItem("database_sanpham", JSON.stringify(products));
+        alert(idEdit ? "Cập nhật thành công!" : "Thêm sản phẩm thành công!");
         location.reload();
     }
 
-    function renderAdminProducts() {
-        let products = JSON.parse(localStorage.getItem("database_sanpham")) || [];
-        const tbody = document.getElementById("product-admin-list");
-        tbody.innerHTML = products.map(p => `
-            <tr>
-                <td><img src="${p.img || 'https://via.placeholder.com/50'}" class="admin-prod-img" onerror="this.src='https://via.placeholder.com/50'"></td>
-                <td><b>${p.name}</b></td>
-                <td>${p.price.toLocaleString()} VNĐ</td>
-                <td style="color:green; font-weight:bold">${parseFloat(p.profit)}%</td>
-                <td>${p.days || 90} Ngày</td>
-                <td><span style="background:#e2e8f0; padding:3px 8px; border-radius:5px; font-size:12px;">${p.badge || 'Phổ biến'}</span></td>
-                <td>
-                    <button class="btn btn-edit" onclick="editProduct('${p.id}')">Sửa</button>
-                    <button class="btn btn-delete" onclick="deleteProduct('${p.id}')">Xóa</button>
-                </td>
-            </tr>
-        `).join('');
+    window.deleteProduct = async function(id) {
+        if(confirm("Xóa sản phẩm này trên hệ thống?")) {
+            await deleteDoc(doc(db, "products", id));
+            location.reload();
+        }
     }
 
-    function editProduct(id) {
-        const products = JSON.parse(localStorage.getItem("database_sanpham")) || [];
-        const p = products.find(item => item.id === id);
-        if(p) {
+    window.editProduct = async function(id) {
+        const docSnap = await getDoc(doc(db, "products", id));
+        if (docSnap.exists()) {
+            const p = docSnap.data();
             document.getElementById('p-id-edit').value = p.id;
             document.getElementById('p-name').value = p.name;
             document.getElementById('p-price').value = p.price;
@@ -287,131 +280,137 @@
         }
     }
 
-    function cancelEdit() { location.reload(); }
+    window.cancelEdit = function() { location.reload(); }
 
-    function deleteProduct(id) {
-        if(confirm("Xóa sản phẩm này?")) {
-            let products = JSON.parse(localStorage.getItem("database_sanpham")) || [];
-            products = products.filter(p => p.id !== id);
-            localStorage.setItem("database_sanpham", JSON.stringify(products));
-            renderAdminProducts();
-        }
-    }
-
-    // --- DUYỆT NẠP / RÚT TIỀN ---
-    function approveOrder(orderId) {
-        let orders = JSON.parse(localStorage.getItem("database_lenh_nap")) || [];
-        let users = JSON.parse(localStorage.getItem("database_nguoidung")) || [];
-        const oIdx = orders.findIndex(o => o.orderId === orderId);
-        const uIdx = users.findIndex(u => u.phone === orders[oIdx].phone);
-        if (uIdx !== -1) {
-            users[uIdx].balance += orders[oIdx].amount;
-            users[uIdx].status = "Đã kích hoạt";
-            if (!users[uIdx].history) users[uIdx].history = [];
-            users[uIdx].history.unshift({ id: orderId, type: "Nạp tiền", amount: "+" + orders[oIdx].amount.toLocaleString() + " ₫", time: new Date().toLocaleString(), status: "Thành công", color: "green" });
-            orders[oIdx].status = "Thành công";
-            localStorage.setItem("database_nguoidung", JSON.stringify(users));
-            localStorage.setItem("database_lenh_nap", JSON.stringify(orders));
+    window.approveOrder = async function(orderId, phone, amount) {
+        if(confirm("Xác nhận đã nhận tiền và duyệt đơn này?")) {
+            await updateDoc(doc(db, "deposits", orderId), { status: "Thành công" });
+            
+            const userRef = doc(db, "users", phone);
+            const userSnap = await getDoc(userRef);
+            if(userSnap.exists()) {
+                const currentBalance = userSnap.data().balance || 0;
+                await updateDoc(userRef, { 
+                    balance: currentBalance + Number(amount),
+                    status: "Đã kích hoạt"
+                });
+            }
             alert("Đã duyệt nạp tiền!");
             location.reload();
         }
     }
-    
-    function rejectOrder(orderId) {
-        if(confirm("Từ chối lệnh nạp tiền này?")) {
-            let orders = JSON.parse(localStorage.getItem("database_lenh_nap")) || [];
-            const oIdx = orders.findIndex(o => o.orderId === orderId);
-            if (oIdx !== -1) {
-                orders[oIdx].status = "Bị hủy";
-                localStorage.setItem("database_lenh_nap", JSON.stringify(orders));
-                alert("Đã từ chối lệnh nạp!");
-                location.reload();
-            }
-        }
-    }
 
-    function renderWithdraws() {
-        const list = JSON.parse(localStorage.getItem("database_lenh_rut")) || [];
-        const tbody = document.getElementById("withdraw-table");
-        tbody.innerHTML = list.filter(o => o.status === "Chờ duyệt").map(o => `
-            <tr>
-                <td>${o.orderId}</td>
-                <td><b>${o.userName}</b><br>${o.phone}</td>
-                <td style="color:red; font-weight:bold;">-${o.amount.toLocaleString()} ₫</td>
-                <td style="font-size:12px;">${o.bankInfo}</td>
-                <td>
-                    <button class="btn btn-withdraw" onclick="approveWithdraw('${o.orderId}')">Duyệt Rút</button>
-                    <button class="btn btn-delete" onclick="rejectWithdraw('${o.orderId}')">Từ chối</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-    
-    function approveWithdraw(orderId) {
-        let list = JSON.parse(localStorage.getItem("database_lenh_rut")) || [];
-        let users = JSON.parse(localStorage.getItem("database_nguoidung")) || [];
-        const idx = list.findIndex(o => o.orderId === orderId);
-        const uIdx = users.findIndex(u => u.phone === list[idx].phone);
-        if (uIdx !== -1) {
-            if (users[uIdx].balance < list[idx].amount) return alert("Khách không đủ số dư!");
-            users[uIdx].balance -= list[idx].amount;
-            if (!users[uIdx].history) users[uIdx].history = [];
-            users[uIdx].history.unshift({ id: orderId, type: "Rút tiền", amount: "-" + list[idx].amount.toLocaleString() + " ₫", time: new Date().toLocaleString(), status: "Thành công", color: "red" });
-            list[idx].status = "Thành công";
-            localStorage.setItem("database_nguoidung", JSON.stringify(users));
-            localStorage.setItem("database_lenh_rut", JSON.stringify(list));
-            alert("Đã duyệt rút tiền thành công!");
+    window.rejectOrder = async function(orderId) {
+        if(confirm("Từ chối lệnh nạp tiền này?")) {
+            await updateDoc(doc(db, "deposits", orderId), { status: "Bị hủy" });
+            alert("Đã hủy lệnh!");
             location.reload();
         }
     }
-    
-    function rejectWithdraw(orderId) {
-        if(confirm("Từ chối lệnh rút tiền này?")) {
-            let list = JSON.parse(localStorage.getItem("database_lenh_rut")) || [];
-            const idx = list.findIndex(o => o.orderId === orderId);
-            if (idx !== -1) {
-                list[idx].status = "Bị hủy";
-                localStorage.setItem("database_lenh_rut", JSON.stringify(list));
-                alert("Đã từ chối lệnh rút!");
+
+    window.approveWithdraw = async function(orderId, phone, amount) {
+        if(confirm("Đã chuyển khoản cho khách và duyệt lệnh này?")) {
+            const userRef = doc(db, "users", phone);
+            const userSnap = await getDoc(userRef);
+            if(userSnap.exists()) {
+                const currentBalance = userSnap.data().balance || 0;
+                if(currentBalance < amount) return alert("Khách không đủ số dư để trừ!");
+                
+                await updateDoc(userRef, { balance: currentBalance - Number(amount) });
+                await updateDoc(doc(db, "withdraws", orderId), { status: "Thành công" });
+                alert("Đã duyệt rút tiền!");
                 location.reload();
             }
         }
     }
 
-    function saveBankConfig() {
-        const config = { bank: document.getElementById('bank-id').value.trim(), stk: document.getElementById('bank-stk').value.trim(), name: document.getElementById('bank-name').value.toUpperCase().trim() };
-        localStorage.setItem("admin_bank_config", JSON.stringify(config));
-        alert("Đã lưu cấu hình Ngân hàng!");
+    window.rejectWithdraw = async function(orderId) {
+        if(confirm("Từ chối lệnh rút tiền này?")) {
+            await updateDoc(doc(db, "withdraws", orderId), { status: "Bị hủy" });
+            alert("Đã hủy lệnh!");
+            location.reload();
+        }
     }
 
-    // --- KHỞI CHẠY KHI MỞ TRANG ---
-    window.onload = function() {
-        // Load cấu hình ngân hàng
-        const cfg = JSON.parse(localStorage.getItem("admin_bank_config"));
-        if(cfg) { document.getElementById('bank-id').value = cfg.bank; document.getElementById('bank-stk').value = cfg.stk; document.getElementById('bank-name').value = cfg.name; }
-        
-        // Load thời gian hệ thống
-        const savedTime = localStorage.getItem("admin_start_time");
-        if(savedTime) { document.getElementById('sys-start-time').value = savedTime; }
+    // --- KHỞI CHẠY LẤY DỮ LIỆU TỪ MÂY KHI MỞ TRANG ---
+    window.onload = async function() {
+        // Lấy Config
+        const noticeSnap = await getDoc(doc(db, "config", "notice"));
+        if(noticeSnap.exists()) {
+            document.getElementById('n-title').value = noticeSnap.data().title || '';
+            document.getElementById('n-content').value = noticeSnap.data().content || '';
+            document.getElementById('n-link').value = noticeSnap.data().link || '';
+        }
 
-        loadNotice();
-        renderAdminProducts();
-        renderWithdraws();
-        
-        const orders = JSON.parse(localStorage.getItem("database_lenh_nap")) || [];
-        document.getElementById("deposit-table").innerHTML = orders.filter(o => o.status === "Chờ duyệt").map(o => `
-            <tr><td>${o.orderId}</td><td>${o.userName}</td><td>${o.amount.toLocaleString()} ₫</td>
-            <td>
-                <button class="btn btn-approve" onclick="approveOrder('${o.orderId}')">Duyệt Nạp</button>
-                <button class="btn btn-delete" onclick="rejectOrder('${o.orderId}')">Từ chối</button>
-            </td></tr>
-        `).join('');
+        const timeSnap = await getDoc(doc(db, "config", "system_time"));
+        if(timeSnap.exists()) document.getElementById('sys-start-time').value = timeSnap.data().startTime || '';
 
-        const users = JSON.parse(localStorage.getItem("database_nguoidung")) || [];
-        document.getElementById("user-table-body").innerHTML = users.map(u => `
-            <tr><td>#${u.id}</td><td>${u.name}<br>${u.phone}</td><td>${u.balance.toLocaleString()} ₫</td>
-            <td><span class="status-badge" style="background:${u.status === 'Đã kích hoạt'?'#dcfce7':'#fee2e2'}; color:${u.status === 'Đã kích hoạt'?'#15803d':'#b91c1c'}">${u.status}</span></td></tr>
-        `).join('');
+        const bankSnap = await getDoc(doc(db, "config", "bank"));
+        if(bankSnap.exists()) {
+            document.getElementById('bank-id').value = bankSnap.data().bank || '';
+            document.getElementById('bank-stk').value = bankSnap.data().stk || '';
+            document.getElementById('bank-name').value = bankSnap.data().name || '';
+        }
+
+        // Lấy Sản Phẩm
+        const prodSnapshot = await getDocs(collection(db, "products"));
+        let pHtml = "";
+        prodSnapshot.forEach((doc) => {
+            const p = doc.data();
+            pHtml += `<tr>
+                <td><img src="${p.img || 'https://via.placeholder.com/50'}" class="admin-prod-img" onerror="this.src='https://via.placeholder.com/50'"></td>
+                <td><b>${p.name}</b></td>
+                <td>${p.price.toLocaleString()} VNĐ</td>
+                <td style="color:green; font-weight:bold">${parseFloat(p.profit)}%</td>
+                <td>${p.days || 90} Ngày</td>
+                <td><span style="background:#e2e8f0; padding:3px 8px; border-radius:5px; font-size:12px;">${p.badge || 'Phổ biến'}</span></td>
+                <td>
+                    <button class="btn btn-edit" onclick="editProduct('${p.id}')">Sửa</button>
+                    <button class="btn btn-delete" onclick="deleteProduct('${p.id}')">Xóa</button>
+                </td>
+            </tr>`;
+        });
+        document.getElementById("product-admin-list").innerHTML = pHtml;
+
+        // Lấy Lệnh Nạp
+        const depSnapshot = await getDocs(collection(db, "deposits"));
+        let dHtml = "";
+        depSnapshot.forEach((doc) => {
+            const o = doc.data();
+            if(o.status === "Chờ duyệt") {
+                dHtml += `<tr><td>${o.orderId}</td><td>${o.userName}<br>${o.phone}</td><td style="color:green; font-weight:bold;">+${Number(o.amount).toLocaleString()} ₫</td>
+                <td>
+                    <button class="btn btn-approve" onclick="approveOrder('${o.orderId}', '${o.phone}', ${o.amount})">Duyệt Nạp</button>
+                    <button class="btn btn-delete" onclick="rejectOrder('${o.orderId}')">Từ chối</button>
+                </td></tr>`;
+            }
+        });
+        document.getElementById("deposit-table").innerHTML = dHtml;
+
+        // Lấy Lệnh Rút
+        const witSnapshot = await getDocs(collection(db, "withdraws"));
+        let wHtml = "";
+        witSnapshot.forEach((doc) => {
+            const o = doc.data();
+            if(o.status === "Chờ duyệt") {
+                wHtml += `<tr><td>${o.orderId}</td><td><b>${o.userName}</b><br>${o.phone}</td><td style="color:red; font-weight:bold;">-${Number(o.amount).toLocaleString()} ₫</td><td style="font-size:12px;">${o.bankInfo}</td>
+                <td>
+                    <button class="btn btn-withdraw" onclick="approveWithdraw('${o.orderId}', '${o.phone}', ${o.amount})">Duyệt Rút</button>
+                    <button class="btn btn-delete" onclick="rejectWithdraw('${o.orderId}')">Từ chối</button>
+                </td></tr>`;
+            }
+        });
+        document.getElementById("withdraw-table").innerHTML = wHtml;
+
+        // Lấy User
+        const userSnapshot = await getDocs(collection(db, "users"));
+        let uHtml = "";
+        userSnapshot.forEach((doc) => {
+            const u = doc.data();
+            uHtml += `<tr><td>${u.phone}</td><td>${u.name}</td><td>${Number(u.balance).toLocaleString()} ₫</td>
+            <td><span class="status-badge" style="background:${u.status === 'Đã kích hoạt'?'#dcfce7':'#fee2e2'}; color:${u.status === 'Đã kích hoạt'?'#15803d':'#b91c1c'}">${u.status || 'Chưa kích hoạt'}</span></td></tr>`;
+        });
+        document.getElementById("user-table-body").innerHTML = uHtml;
     };
 </script>
 </body>
