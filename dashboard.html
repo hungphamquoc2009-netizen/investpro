@@ -112,7 +112,7 @@
                     <input type="text" id="edit-name" placeholder="Nhập họ và tên...">
                 </div>
                 <div class="input-group">
-                    <label style="color: #d35400;">Mật khẩu hiện tại (Bắt buộc nếu muốn đổi MK):</label>
+                    <label style="color: #d35400;">Mật khẩu hiện tại (Bắt buộc nếu muốn đổi):</label>
                     <input type="password" id="edit-pass-old" placeholder="Nhập mật khẩu cũ...">
                 </div>
                 <div class="input-group">
@@ -175,11 +175,9 @@
         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
             <div style="font-size: 35px; background: #f0f3f7; border-radius: 50%; width: 65px; height: 65px; display: flex; justify-content: center; align-items: center; color: #4b238f;">👤</div>
             <div style="flex: 1;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <h2 style="margin: 0; color: var(--primary); font-size: 18px; font-weight: 800;">
-                        <span id="m-name">...</span> <span id="m-id-me" style="color: #666; font-size: 14px;"></span>
-                    </h2>
-                </div>
+                <h2 style="margin: 0 0 5px 0; color: var(--primary); font-size: 18px; font-weight: 800;">
+                    <span id="m-name">...</span> <span id="m-id-me" style="color: #666; font-size: 14px;"></span>
+                </h2>
                 <div id="user-status-badge" style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; display: inline-block;">...</div>
             </div>
         </div>
@@ -219,7 +217,7 @@
         let currentUser = null;
         let profitInterval;
 
-        // ================= TIỆN ÍCH GẮN VÀO WINDOW =================
+        // TIỆN ÍCH CHUNG
         window.closeNotice = () => document.getElementById('notice-modal').style.display = 'none';
         window.logout = () => { localStorage.removeItem('thongTinTaiKhoan'); window.location.href = 'dang-nhap.html'; };
         window.copyCode = () => { navigator.clipboard.writeText(document.getElementById('m-code').innerText); alert("Đã sao chép mã mời!"); };
@@ -232,7 +230,7 @@
             if(id !== 'packages' && profitInterval) clearInterval(profitInterval);
         };
 
-        // ================= CẬP NHẬT THÔNG TIN CÁ NHÂN =================
+        // POPUP CẬP NHẬT THÔNG TIN (CÓ KIỂM TRA MẬT KHẨU CŨ)
         window.openUpdateModal = () => {
             if(currentUser) {
                 document.getElementById('edit-name').value = currentUser.name || '';
@@ -254,14 +252,16 @@
             let updateData = {};
             let isChanged = false;
 
+            // Kiểm tra đổi tên
             if (newName && newName !== currentUser.name) {
                 updateData.name = newName;
                 isChanged = true;
             }
 
+            // Kiểm tra đổi mật khẩu
             if (newPass) {
                 if (!oldPass) return alert("Vui lòng nhập mật khẩu hiện tại để đổi mật khẩu mới!");
-                if (oldPass !== currentUser.password) return alert("Mật khẩu hiện tại không chính xác!");
+                if (oldPass !== currentUser.password) return alert("Mật khẩu hiện tại không đúng!");
                 if (newPass.length < 8) return alert("Mật khẩu mới phải có ít nhất 8 ký tự!");
                 
                 updateData.password = newPass;
@@ -277,8 +277,10 @@
             btn.innerText = "Đang xử lý...";
 
             try {
+                // Cập nhật lên Firebase
                 await updateDoc(doc(db, "users", currentUser.phone), updateData);
 
+                // Cập nhật thẻ LocalStorage
                 const ss = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
                 if (updateData.name) ss.name = updateData.name;
                 localStorage.setItem('thongTinTaiKhoan', JSON.stringify(ss));
@@ -293,7 +295,7 @@
             }
         };
 
-        // ================= TẠO THÔNG BÁO RÚT TIỀN FAKE =================
+        // TẠO THÔNG BÁO RÚT TIỀN FAKE
         window.generateFakeWithdrawals = () => {
             const prefixes = ['032', '033', '034', '035', '036', '037', '038', '039', '096', '097', '098', '086', '091', '094', '083', '084', '085', '081', '082', '070', '079', '077', '076', '078', '089', '090', '093'];
             let marqueeHtml = '';
@@ -307,20 +309,13 @@
             document.getElementById('marquee-text').innerHTML = marqueeHtml;
         };
 
-        // ================= TẢI VÀ MUA SẢN PHẨM =================
+        // TẢI SẢN PHẨM TỪ FIREBASE
         async function loadProducts() {
             try {
-                // Ưu tiên đọc từ Firebase, nếu trống đọc từ LocalStorage để chống rỗng
                 const snap = await getDocs(collection(db, "products"));
-                let products = [];
-                snap.forEach(doc => products.push(doc.data()));
-                
-                if(products.length === 0) {
-                    products = JSON.parse(localStorage.getItem("database_sanpham")) || [];
-                }
-
                 let html = "";
-                products.forEach(p => {
+                snap.forEach(doc => {
+                    const p = doc.data();
                     let rate = parseFloat(p.profit) || 0;
                     let days = parseInt(p.days) || 90;
                     let dProfit = (p.price * rate) / 100;
@@ -336,7 +331,7 @@
                             <div class="pc-header"><div class="pc-title">${p.name}</div><div class="pc-badge ${badgeClass}">${p.badge || 'Phổ biến'}</div></div>
                             <div class="pc-roi">ROI chu kỳ <span>${(rate*days).toLocaleString()}%</span></div>
                             <div class="pc-list">
-                                <div class="pc-row">Giá gói <strong>${Number(p.price).toLocaleString()} VNĐ</strong></div>
+                                <div class="pc-row">Giá gói <strong>${p.price.toLocaleString()} VNĐ</strong></div>
                                 <div class="pc-row">Lãi mỗi ngày <strong style="color: #10b981;">${dProfit.toLocaleString()} VNĐ</strong></div>
                                 <div class="pc-row">Thời hạn <strong>${days} ngày</strong></div>
                                 <div class="pc-row">Tổng lãi chu kỳ <strong>${(dProfit * days).toLocaleString()} VNĐ</strong></div>
@@ -356,7 +351,7 @@
 
         window.buyProduct = async (id, price, name, rate) => {
             if(!currentUser) return;
-            if((currentUser.balance || 0) < price) return alert("Không đủ số dư, vui lòng nạp thêm!");
+            if(currentUser.balance < price) return alert("Không đủ số dư, vui lòng nạp thêm!");
             
             if(confirm(`Xác nhận đầu tư gói ${name}?`)) {
                 try {
@@ -383,7 +378,7 @@
             }
         };
 
-        // ================= HIỂN THỊ GÓI ĐANG CHẠY =================
+        // HIỂN THỊ GÓI ĐANG CHẠY
         window.showMyPackages = () => {
             changePage('packages', null);
             const container = document.getElementById('my-packages-list');
@@ -421,7 +416,7 @@
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 13px; color: #718096; margin-bottom: 8px;">
                                 <span>Tiền đầu tư:</span>
-                                <b style="color: #1a202c;">${Number(inv.price).toLocaleString()} VNĐ</b>
+                                <b style="color: #1a202c;">${inv.price.toLocaleString()} VNĐ</b>
                             </div>
                             <div style="display: flex; justify-content: space-between; font-size: 13px; color: #718096; margin-bottom: 8px;">
                                 <span>Lợi nhuận ngày:</span>
@@ -449,35 +444,33 @@
                             </div>
                         </div>
                     `;
-                };
-                
-                renderLive();
-                profitInterval = setInterval(renderLive, 1000);
-            } catch(e) {}
+                }).join('');
+            };
+            
+            renderLive();
+            profitInterval = setInterval(renderLive, 1000);
         };
 
-        // ================= ĐỒNG BỘ REALTIME TỪ FIREBASE =================
+        // THEO DÕI FIREBASE THEO THỜI GIAN THỰC
         function listenUserData(phone) {
             onSnapshot(doc(db, "users", phone), async (docSnap) => {
                 if(docSnap.exists()) {
                     currentUser = docSnap.data();
                     
-                    // CẬP NHẬT UI
-                    const safeName = currentUser.name || "Khách hàng";
-                    document.getElementById('home-greeting').innerText = `Xin chào, ${safeName}`;
-                    document.getElementById('m-name').innerText = safeName.toUpperCase();
+                    // CẬP NHẬT UI CÁ NHÂN
+                    document.getElementById('home-greeting').innerText = `Xin chào, ${currentUser.name}`;
+                    document.getElementById('m-name').innerText = currentUser.name.toUpperCase();
                     document.getElementById('m-id-me').innerText = " - #" + (currentUser.id || '0000');
                     document.getElementById('m-code').innerText = currentUser.id || '0000';
                     document.getElementById('hs-balance').innerText = Number(currentUser.balance || 0).toLocaleString() + " VNĐ";
                     document.getElementById('hs-active-pkg').innerText = (currentUser.investments || []).length;
                     
-                    // NGÂN HÀNG
                     if(currentUser.bankInfo) {
                         const b = document.getElementById('bank-status');
                         b.innerText = "✓ Đã liên kết"; b.style.color = "#2ecc71";
                     }
 
-                    // KÍCH HOẠT
+                    // CẬP NHẬT TRẠNG THÁI KÍCH HOẠT
                     const statusBadge = document.getElementById('user-status-badge');
                     if (currentUser.status === "Đã kích hoạt") {
                         statusBadge.innerText = "Đã kích hoạt";
@@ -489,7 +482,7 @@
                         statusBadge.style.background = "#fee2e2";
                     }
 
-                    // TÍNH HOA HỒNG F1 VÀ RÚT TIỀN
+                    // TÍNH HOA HỒNG TỪ F1 TRÊN FIREBASE
                     try {
                         const q = query(collection(db, "users"), where("referredBy", "==", currentUser.phone));
                         const querySnapshot = await getDocs(q);
@@ -511,8 +504,8 @@
                                 let f1Commission = f1TotalDeposit * 0.2; 
                                 totalCommission += f1Commission;
 
-                                let hiddenPhone = (f1.phone || "000").substring(0,4) + "***" + (f1.phone || "000").slice(-3);
-                                return `<div class="f1-item"><div><div class="f1-name">👤 ${f1.name || 'F1'}</div><div class="f1-phone">${hiddenPhone}</div></div><div class="f1-money"><div style="font-size: 11px; color: #888;">Nạp: ${f1TotalDeposit.toLocaleString()}₫</div><div style="font-size: 14px; font-weight: bold; color: #2ecc71;">+${f1Commission.toLocaleString()} ₫</div></div></div>`;
+                                let hiddenPhone = f1.phone.substring(0,4) + "***" + f1.phone.slice(-3);
+                                return `<div class="f1-item"><div><div class="f1-name">👤 ${f1.name}</div><div class="f1-phone">${hiddenPhone}</div></div><div class="f1-money"><div style="font-size: 11px; color: #888;">Nạp: ${f1TotalDeposit.toLocaleString()}₫</div><div style="font-size: 14px; font-weight: bold; color: #2ecc71;">+${f1Commission.toLocaleString()} ₫</div></div></div>`;
                             }).join('');
                         } else {
                             f1Container.innerHTML = `<div style="text-align:center; padding: 30px; background:white; border-radius:15px; color:#999; font-size:13px;">Bạn chưa giới thiệu được thành viên nào.</div>`;
@@ -522,6 +515,7 @@
                         document.getElementById('total-commission').innerText = totalCommission.toLocaleString() + " ₫";
                         document.getElementById('hs-profit').innerText = totalCommission.toLocaleString() + " VNĐ";
 
+                        // TÍNH TỔNG RÚT TIỀN
                         const totalWithdrawn = (currentUser.history || []).reduce((sum, h) => {
                             if(h.type.includes("Rút tiền") && h.status === "Thành công") {
                                 return sum + Number(h.amount.replace(/[^0-9]/g, ''));
@@ -530,14 +524,16 @@
                         }, 0);
                         document.getElementById('hs-withdrawn').innerText = totalWithdrawn.toLocaleString() + " VNĐ";
                         
-                    } catch(e) { console.log(e); }
+                    } catch(e) {
+                        console.log("Lỗi tính toán F1: ", e);
+                    }
                 } else {
                     logout(); 
                 }
             });
         }
 
-        // ================= KHỞI CHẠY =================
+        // KHỞI CHẠY
         window.onload = async () => {
             const rawSS = localStorage.getItem('thongTinTaiKhoan');
             if(!rawSS) return location.href="dang-nhap.html";
@@ -547,22 +543,19 @@
             loadProducts();
             window.generateFakeWithdrawals();
 
-            // POPUP THÔNG BÁO ADMIN
-            try {
-                const snap = await getDoc(doc(db, "config", "notice"));
-                if(snap.exists()) {
-                    const data = snap.data();
-                    document.getElementById('popup-title').innerText = data.title;
-                    let bodyHtml = '';
-                    data.content.split('\n').forEach(line => {
-                        if (line.trim()) bodyHtml += `<div class="modal-text"><span>📢</span> <span>${line}</span></div>`;
-                    });
-                    if (data.link) bodyHtml += `<div class="modal-group-title">Tham gia nhóm chính thức ⬇️</div><a href="${data.link}" target="_blank" class="modal-link">${data.link}</a>`;
-                    bodyHtml += `<button class="btn-understand" onclick="closeNotice()">Tôi đã hiểu</button>`;
-                    document.getElementById('popup-body').innerHTML = bodyHtml;
-                    document.getElementById('notice-modal').style.display = 'flex';
-                }
-            } catch(e){}
+            const snap = await getDoc(doc(db, "config", "notice"));
+            if(snap.exists()) {
+                const data = snap.data();
+                document.getElementById('popup-title').innerText = data.title;
+                let bodyHtml = '';
+                data.content.split('\n').forEach(line => {
+                    if (line.trim()) bodyHtml += `<div class="modal-text"><span>📢</span> <span>${line}</span></div>`;
+                });
+                if (data.link) bodyHtml += `<div class="modal-group-title">Tham gia nhóm chính thức ⬇️</div><a href="${data.link}" target="_blank" class="modal-link">${data.link}</a>`;
+                bodyHtml += `<button class="btn-understand" onclick="closeNotice()">Tôi đã hiểu</button>`;
+                document.getElementById('popup-body').innerHTML = bodyHtml;
+                document.getElementById('notice-modal').style.display = 'flex';
+            }
         };
     </script>
 </body>
