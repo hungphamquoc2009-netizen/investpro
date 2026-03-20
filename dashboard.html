@@ -20,9 +20,6 @@
         .welcome-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #edf2f7; }
         .w-left h2 { margin: 0; font-size: 20px; color: #1a202c; font-weight: 800; }
         .w-left p { margin: 6px 0 0 0; font-size: 11px; color: #718096; line-height: 1.4; }
-        .w-right { text-align: right; min-width: 100px; }
-        .w-right span { display: block; font-size: 10px; color: #718096; margin-bottom: 4px; font-weight: 600; }
-        .w-right strong { font-size: 14px; color: #2563eb; font-weight: 800; }
         .marquee-box { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 10px; font-size: 12px; font-weight: 600; margin-bottom: 15px; overflow: hidden; display: flex; align-items: center; border: 1px solid #fde68a; }
         .marquee-content { display: inline-block; white-space: nowrap; animation: scrollMarquee 25s linear infinite; }
         @keyframes scrollMarquee { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
@@ -48,10 +45,6 @@
         .pc-list { display: flex; flex-direction: column; gap: 8px; }
         .pc-row { display: flex; justify-content: space-between; padding: 12px 15px; border: 1px solid #f1f5f9; border-radius: 8px; font-size: 13px; color: #64748b; align-items: center; }
         .pc-row strong { color: #1e293b; font-weight: 800; font-size: 14px; }
-        .pc-estimate { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; }
-        .pc-estimate-title { font-size: 12px; color: #64748b; margin-bottom: 12px; }
-        .pc-est-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #475569; align-items: center; }
-        .pc-est-row strong { color: #10b981; font-weight: 800; font-size: 14px; }
         .pc-btn { width: 100%; background: #6366f1; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
         .pc-btn:active { transform: scale(0.98); background: #4f46e5; }
         .stats-container { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -93,11 +86,7 @@
                 <h2 id="home-greeting">Xin chào, ...</h2>
                 <p>Theo dõi lợi nhuận và trạng thái rút tiền theo thời gian thực.</p>
             </div>
-            <div class="w-right">
-                <span>Thời gian vận hành</span>
-                <strong id="run-time">0 ngày 00:00:00</strong>
             </div>
-        </div>
         <div class="marquee-box"><div class="marquee-content" id="marquee-text"></div></div>
         <div class="home-stats-grid">
             <div class="hs-card" onclick="location.href='naptien.html'"><div class="hs-label">Số dư ➔</div><div class="hs-val" id="hs-balance">0 VNĐ</div></div>
@@ -141,7 +130,7 @@
                 <h2 style="margin: 0 0 5px 0; color: var(--primary); font-size: 18px; font-weight: 800;">
                     <span id="m-name">...</span> <span id="m-id-me" style="color: #666; font-size: 14px;"></span>
                 </h2>
-                <div id="user-status-badge" style="font-size: 11px; color: #10b981; font-weight: 800; background: #d1fae5; padding: 4px 10px; border-radius: 12px; display: inline-block;">Đã kích hoạt</div>
+                <div id="user-status-badge" style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px; display: inline-block;">...</div>
             </div>
         </div>
         <div class="menu-list">
@@ -193,14 +182,13 @@
             if(id === 'home') loadNotice();
         };
 
-        // 0. TẠO THÔNG BÁO RÚT TIỀN FAKE (Đến 2 Triệu)
+        // TẠO THÔNG BÁO RÚT TIỀN FAKE
         window.generateFakeWithdrawals = () => {
             const prefixes = ['032', '033', '034', '035', '036', '037', '038', '039', '096', '097', '098', '086', '091', '094', '083', '084', '085', '081', '082', '070', '079', '077', '076', '078', '089', '090', '093'];
             let marqueeHtml = '';
             for (let i = 0; i < 15; i++) {
                 let prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
                 let suffix = Math.floor(Math.random() * 900) + 100;
-                // Random số tiền từ 50,000 đến 2,000,000
                 let randomAmount = Math.floor(Math.random() * 196) + 5; 
                 let amount = (randomAmount * 10000).toLocaleString();
                 marqueeHtml += `📢 Thông báo rút: ${prefix}****${suffix} đã rút ${amount} VNĐ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`;
@@ -208,7 +196,7 @@
             document.getElementById('marquee-text').innerHTML = marqueeHtml;
         };
 
-        // 1. TẢI THÔNG BÁO TỪ ADMIN
+        // TẢI THÔNG BÁO TỪ ADMIN
         async function loadNotice() {
             const snap = await getDoc(doc(db, "config", "notice"));
             if(snap.exists()) {
@@ -225,7 +213,7 @@
             }
         }
 
-        // 2. TẢI SẢN PHẨM TỪ ADMIN
+        // TẢI SẢN PHẨM TỪ ADMIN
         async function loadProducts() {
             const snap = await getDocs(collection(db, "products"));
             let html = "";
@@ -268,14 +256,13 @@
             }
         };
 
-        // 3. THEO DÕI DỮ LIỆU NGƯỜI DÙNG (REALTIME)
+        // THEO DÕI DỮ LIỆU NGƯỜI DÙNG (REALTIME)
         function listenUserData(phone) {
             onSnapshot(doc(db, "users", phone), (docSnap) => {
                 if(docSnap.exists()) {
                     currentUser = docSnap.data();
                     document.getElementById('home-greeting').innerText = `Xin chào, ${currentUser.name}`;
                     document.getElementById('m-name').innerText = currentUser.name.toUpperCase();
-                    // Cập nhật ID ở Trang Tôi
                     document.getElementById('m-id-me').innerText = " - #" + (currentUser.id || '0000');
                     document.getElementById('m-code').innerText = currentUser.id || '0000';
                     document.getElementById('hs-balance').innerText = Number(currentUser.balance).toLocaleString() + " VNĐ";
@@ -285,31 +272,94 @@
                         const b = document.getElementById('bank-status');
                         b.innerText = "✓ Đã liên kết"; b.style.color = "#2ecc71";
                     }
+
+                    // Cập nhật trạng thái kích hoạt tài khoản
+                    const statusBadge = document.getElementById('user-status-badge');
+                    if (currentUser.status === "Đã kích hoạt") {
+                        statusBadge.innerText = "Đã kích hoạt";
+                        statusBadge.style.color = "#10b981";
+                        statusBadge.style.background = "#d1fae5";
+                    } else {
+                        statusBadge.innerText = "Chưa kích hoạt";
+                        statusBadge.style.color = "#ef4444";
+                        statusBadge.style.background = "#fee2e2";
+                    }
                 }
             });
         }
 
-        // 4. HIỂN THỊ CHI TIẾT GÓI ĐANG CHẠY
+        // HIỂN THỊ CHI TIẾT GÓI ĐANG CHẠY (REALTIME + 24H COUNTDOWN)
         window.showMyPackages = () => {
             changePage('packages', null);
             const container = document.getElementById('my-packages-list');
             if(!currentUser.investments || currentUser.investments.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:60px; color:#888;">Chưa có gói nào.</div>';
+                container.innerHTML = '<div style="text-align:center; padding:60px; color:#888;">Bạn chưa có gói đầu tư nào đang chạy.</div>';
                 return;
             }
 
-            profitInterval = setInterval(() => {
+            const renderLive = () => {
                 const now = Date.now();
                 container.innerHTML = currentUser.investments.map(inv => {
                     const dProfit = inv.price * inv.profitRate / 100;
-                    const elapsedSec = (now - inv.time) / 1000;
-                    const liveProfit = elapsedSec * (dProfit / 86400);
-                    return `<div class="welcome-card" style="flex-direction:column; align-items:flex-start; gap:10px;">
-                        <b>${inv.name}</b>
-                        <div style="font-size:12px; color:#666;">Lãi tích lũy: <span style="color:#e65100; font-weight:800;">${liveProfit.toLocaleString('vi-VN',{maxFractionDigits:2})} ₫</span></div>
-                    </div>`;
+                    const profitPerSecond = dProfit / 86400;
+                    
+                    const elapsedMs = now - inv.time;
+                    const elapsedSeconds = elapsedMs / 1000;
+                    const oneDayMs = 24 * 60 * 60 * 1000; 
+                    
+                    const currentRealtimeProfit = elapsedSeconds * profitPerSecond;
+                    const elapsedDays = Math.floor(elapsedMs / oneDayMs);
+                    const receivedProfit = elapsedDays * dProfit;
+
+                    const nextProfitMs = oneDayMs - (elapsedMs % oneDayMs);
+                    const nextHours = Math.floor(nextProfitMs / (1000 * 60 * 60));
+                    const nextMinutes = Math.floor((nextProfitMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const nextSeconds = Math.floor((nextProfitMs % (1000 * 60)) / 1000);
+                    const timeUntilNext = `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}:${String(nextSeconds).padStart(2, '0')}`;
+
+                    const dateStr = new Date(inv.time).toLocaleString('vi-VN');
+
+                    return `
+                        <div style="background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #edf2f7;">
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 12px; margin-bottom: 12px;">
+                                <b style="color: var(--primary); font-size: 16px;">${inv.name}</b>
+                                <span style="background: #e8f8f5; color: #2ecc71; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 800;">Đang chạy</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #718096; margin-bottom: 8px;">
+                                <span>Tiền đầu tư:</span>
+                                <b style="color: #1a202c;">${inv.price.toLocaleString()} VNĐ</b>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #718096; margin-bottom: 8px;">
+                                <span>Lợi nhuận ngày:</span>
+                                <b style="color: #1a202c;">${dProfit.toLocaleString()} VNĐ</b>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #718096; margin-bottom: 8px;">
+                                <span>Ngày mua:</span>
+                                <b style="color: #1a202c;">${dateStr}</b>
+                            </div>
+
+                            <div style="margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
+                                    <div style="font-size: 12px; color: #718096; font-weight: 600;">Lãi tạm tính (Realtime)</div>
+                                    <div style="font-size: 16px; font-weight: 800; color: #e65100;">${currentRealtimeProfit.toLocaleString('vi-VN', {maximumFractionDigits: 2})} ₫</div>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                                    <div style="font-size: 12px; color: #718096; font-weight: 600;">Lợi nhuận đã nhận</div>
+                                    <div style="font-size: 18px; font-weight: 800; color: #2ecc71;">${receivedProfit.toLocaleString()} ₫</div>
+                                </div>
+                                <div style="text-align: center; margin-top: 12px;">
+                                    <div style="font-size: 11px; color: #e74c3c; font-weight: bold; background: #fdf2f2; padding: 6px; border-radius: 5px; display: inline-block;">
+                                        ⏳ Cộng lãi thực tế sau: ${timeUntilNext}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }).join('');
-            }, 1000);
+            };
+            
+            renderLive();
+            profitInterval = setInterval(renderLive, 1000);
         };
 
         // KHỞI CHẠY
@@ -319,27 +369,7 @@
             listenUserData(ss.phone);
             loadProducts();
             loadNotice();
-            
-            // Chạy số điện thoại ảo rút tiền
             window.generateFakeWithdrawals();
-            
-            // Chạy đồng hồ vận hành bằng mốc lưu từ ADMIN (Hoặc 3 ngày trước nếu chưa cài)
-            setInterval(() => {
-                let savedTime = localStorage.getItem("admin_start_time");
-                let startTime = savedTime ? new Date(savedTime).getTime() : (Date.now() - 3 * 86400000); 
-                const diff = Date.now() - startTime;
-                
-                if (diff < 0) {
-                    document.getElementById('run-time').innerText = "Chưa vận hành";
-                    return;
-                }
-                
-                const d = Math.floor(diff/86400000);
-                const h = Math.floor((diff%86400000)/3600000);
-                const m = Math.floor((diff%3600000)/60000);
-                const s = Math.floor((diff%60000)/1000);
-                document.getElementById('run-time').innerText = `${d} ngày ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-            }, 1000);
         };
     </script>
 </body>
