@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Nhập / Đăng Ký - INVEST PRO</title>
     <style>
-        /* GIỮ NGUYÊN TOÀN BỘ CSS ĐẸP CỦA BẠN */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f4f6f9 0%, #e0e5ec 100%); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .auth-container { background-color: #fff; width: 100%; max-width: 400px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
         .auth-header { background-color: #121a8f; padding: 20px; text-align: center; }
@@ -41,8 +40,8 @@
         <div class="form-area">
             <form id="login-form">
                 <div class="form-group">
-                    <label>Số điện thoại</label>
-                    <input type="text" id="login-phone" placeholder="VD: 0988..." required>
+                    <label>Số điện thoại hoặc ID</label>
+                    <input type="text" id="login-phone" placeholder="VD: 0988... hoặc 0001" required>
                 </div>
                 <div class="form-group">
                     <label>Mật khẩu</label>
@@ -66,7 +65,7 @@
                 </div>
                 <div class="form-group">
                     <label>Mật khẩu</label>
-                    <input type="password" id="reg-pass" placeholder="Tối thiểu 8 ký tự (chữ và số)" required>
+                    <input type="password" id="reg-pass" placeholder="Tối thiểu 8 ký tự" required>
                 </div>
                 <div class="form-group">
                     <label style="color: #e74c3c; font-weight: bold;">Mã Mời (Nếu có)</label>
@@ -85,6 +84,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+        // Cấu hình Firebase của bạn
         const firebaseConfig = {
             apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
             authDomain: "investpro-data.firebaseapp.com",
@@ -98,7 +98,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Chuyển Tab
+        // --- HÀM CHUYỂN TAB (Đăng nhập / Đăng ký) ---
         window.switchTab = function(tab) {
             document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
             document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
@@ -106,32 +106,33 @@
             document.getElementById('tab-register').classList.toggle('active', tab === 'register');
         }
 
-        // --- XỬ LÝ ĐĂNG KÝ ---
-        document.getElementById('register-form').onsubmit = async (e) => {
-            e.preventDefault();
+        // ================= XỬ LÝ ĐĂNG KÝ (FIREBASE) =================
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); // CHẶN LOAD LẠI TRANG
+            
             const btn = document.getElementById('btn-register');
             const name = document.getElementById('reg-name').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
             const pass = document.getElementById('reg-pass').value;
             const inviteCode = document.getElementById('reg-invite').value.trim();
 
-            // Kiểm tra bảo mật
             if (!/^0\d{9}$/.test(phone)) return alert("Số điện thoại phải có 10 số!");
-            if (!/^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(pass)) return alert("Mật khẩu phải có ít nhất 8 ký tự, gồm cả chữ và số!");
+            if (pass.length < 8) return alert("Mật khẩu phải có ít nhất 8 ký tự!");
 
             btn.disabled = true;
             btn.innerText = "Đang xử lý...";
 
             try {
-                // Kiểm tra SĐT đã tồn tại chưa
+                // Kiểm tra xem SĐT đã tồn tại trên mây chưa
                 const userSnap = await getDoc(doc(db, "users", phone));
                 if (userSnap.exists()) {
                     alert("Số điện thoại này đã được sử dụng!");
                     btn.disabled = false;
+                    btn.innerText = "Tạo Tài Khoản";
                     return;
                 }
 
-                // Lấy tổng số user để tạo ID (VD: 0001, 0002)
+                // Lấy tổng số user để tạo ID ngẫu nhiên hoặc tịnh tiến
                 const allUsers = await getDocs(collection(db, "users"));
                 const newId = (allUsers.size + 1).toString().padStart(4, '0');
 
@@ -144,25 +145,30 @@
                     status: 'Chưa kích hoạt',
                     referredBy: inviteCode || null,
                     investments: [],
+                    history: [],
                     createdAt: Date.now()
                 };
 
-                // Lưu lên Firebase
+                // Đẩy dữ liệu lên Firebase
                 await setDoc(doc(db, "users", phone), newUser);
                 
-                alert(`🎉 Đăng ký thành công!\nID của bạn là: ${newId}`);
-                switchTab('login');
+                alert(`🎉 Đăng ký thành công!\nID của bạn là: #${newId}\nVui lòng đăng nhập.`);
+                document.getElementById('register-form').reset();
+                window.switchTab('login');
+                document.getElementById('login-phone').value = phone;
+
             } catch (err) {
                 alert("Lỗi đăng ký: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Tạo Tài Khoản";
             }
-        };
+        });
 
-        // --- XỬ LÝ ĐĂNG NHẬP ---
-        document.getElementById('login-form').onsubmit = async (e) => {
-            e.preventDefault();
+        // ================= XỬ LÝ ĐĂNG NHẬP (FIREBASE) =================
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault(); // CHẶN LOAD LẠI TRANG
+            
             const btn = document.getElementById('btn-login');
             const input = document.getElementById('login-phone').value.trim();
             const pass = document.getElementById('login-pass').value;
@@ -172,36 +178,45 @@
 
             try {
                 let user = null;
-                // Tìm theo SĐT (ID của document)
+                
+                // 1. Thử tìm theo Số điện thoại
                 const snapPhone = await getDoc(doc(db, "users", input));
-                if(snapPhone.exists()) {
+                if (snapPhone.exists()) {
                     user = snapPhone.data();
                 } else {
-                    // Nếu không thấy SĐT, tìm theo ID khách hàng (0001, ...)
+                    // 2. Thử tìm theo Mã ID (nếu khách nhập 0001, 0002)
                     const q = query(collection(db, "users"), where("id", "==", input));
                     const snapId = await getDocs(q);
-                    if(!snapId.empty) user = snapId.docs[0].data();
+                    if (!snapId.empty) user = snapId.docs[0].data();
                 }
 
+                // 3. Kiểm tra mật khẩu
                 if (user && user.password === pass) {
-                    if(user.status === 'Đã Khóa') return alert("Tài khoản của bạn đã bị khóa!");
+                    if (user.status === 'Đã Khóa') {
+                        alert("Tài khoản của bạn đã bị khóa!");
+                        btn.disabled = false;
+                        btn.innerText = "Đăng Nhập";
+                        return;
+                    }
                     
-                    // Lưu phiên đăng nhập vào máy khách
+                    // LƯU PHIÊN ĐĂNG NHẬP VÀO TRÌNH DUYỆT ĐỂ DÙNG CHO DASHBOARD
                     localStorage.setItem('thongTinTaiKhoan', JSON.stringify({
                         phone: user.phone,
                         name: user.name
                     }));
+                    
+                    // Chuyển hướng
                     window.location.href = "dashboard.html";
                 } else {
-                    alert("Thông tin đăng nhập không chính xác!");
+                    alert("Tài khoản hoặc mật khẩu không chính xác!");
                 }
             } catch (err) {
-                alert("Lỗi kết nối: " + err.message);
+                alert("Lỗi kết nối Firebase: " + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "Đăng Nhập";
             }
-        };
+        });
     </script>
 </body>
 </html>
