@@ -10,30 +10,22 @@
         .header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .back-btn { font-size: 20px; font-weight: bold; margin-right: 15px; cursor: pointer; text-decoration: none; color: #333; }
         .container { padding: 20px; max-width: 450px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-        
         .card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; }
         h3 { margin: 0 0 20px 0; font-size: 18px; font-weight: 800; color: #121a8f; text-align: center; }
-        
-        /* BƯỚC 1 */
         .amount-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .amount-item { background: #f1f5f9; padding: 15px 5px; border-radius: 12px; text-align: center; cursor: pointer; font-weight: 700; transition: 0.2s; border: 1px solid transparent; }
         .amount-item.active { background: #121a8f; color: white; }
         input { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; text-align: center; font-size: 18px; font-weight: 800; margin-bottom: 20px; outline: none; color: #121a8f; }
         .btn-next { width: 100%; padding: 16px; background: #121a8f; color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 800; cursor: pointer; }
-
-        /* BƯỚC 2: GIAO DIỆN QR & INFO */
         #payment-info { display: none; text-align: center; }
         .qr-box { background: white; padding: 15px; border-radius: 20px; display: inline-block; margin-bottom: 20px; border: 1px solid #f1f5f9; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         #qr-img { width: 240px; height: 240px; display: block; }
-        
         .info-list { text-align: left; background: #f8fafc; padding: 15px; border-radius: 16px; margin-bottom: 20px; }
         .info-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #edf2f7; }
         .info-item:last-child { border-bottom: none; }
         .info-label { font-size: 12px; color: #64748b; font-weight: 600; }
         .info-value { font-size: 14px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 5px; }
-        
         .copy-tag { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 10px; cursor: pointer; }
-
         .btn-confirm { width: 100%; padding: 16px; background: #2ecc71; color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.2); }
         .btn-back { margin-top: 15px; background: none; border: none; color: #94a3b8; font-size: 13px; cursor: pointer; text-decoration: underline; }
     </style>
@@ -56,36 +48,22 @@
                 <div class="amount-item" onclick="selectAmount(5000000, this)">5M</div>
                 <div class="amount-item" onclick="selectAmount(10000000, this)">10M</div>
             </div>
-            <input type="number" id="custom-amount" placeholder="Nhập số tiền khác...">
+            <input type="number" id="custom-amount" placeholder="Nhập số tiền...">
             <button class="btn-next" onclick="goToPayment()">TIẾP THEO</button>
         </div>
 
         <div class="card" id="payment-info">
             <h3>Quét Mã QR</h3>
-            
-            <div class="qr-box">
-                <img id="qr-img" src="" alt="Mã QR">
-            </div>
-
+            <div class="qr-box"><img id="qr-img" src="" alt="Mã QR"></div>
             <div class="info-list">
-                <div class="info-item">
-                    <span class="info-label">Chủ tài khoản</span>
-                    <span class="info-value" id="disp-name">...</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Số tài khoản</span>
-                    <span class="info-value"><span id="disp-stk">...</span> <span class="copy-tag" onclick="copy('disp-stk')">SAO CHÉP</span></span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Số tiền nạp</span>
-                    <span class="info-value" id="disp-amt" style="color: #e74c3c;">0₫</span>
-                </div>
+                <div class="info-item"><span class="info-label">Chủ tài khoản</span><span class="info-value" id="disp-name">Đang tải...</span></div>
+                <div class="info-item"><span class="info-label">Số tài khoản</span><span class="info-value"><span id="disp-stk">...</span> <span class="copy-tag" onclick="copy('disp-stk')">SAO CHÉP</span></span></div>
+                <div class="info-item"><span class="info-label">Số tiền nạp</span><span class="info-value" id="disp-amt" style="color: #e74c3c;">0₫</span></div>
                 <div class="info-item" style="background: #fff7ed; margin: 5px -5px; padding: 8px 5px; border-radius: 8px;">
                     <span class="info-label" style="color: #c2410c;">Nội dung chuyển</span>
                     <span class="info-value" style="color: #c2410c;"><span id="disp-note">NAP...</span> <span class="copy-tag" style="background:#ffedd5" onclick="copy('disp-note')">SAO CHÉP</span></span>
                 </div>
             </div>
-
             <button class="btn-confirm" onclick="submitDeposit()">TÔI ĐÃ CHUYỂN KHOẢN</button>
             <button class="btn-back" onclick="location.reload()">Quay lại chỉnh tiền</button>
         </div>
@@ -98,8 +76,7 @@
         const firebaseConfig = { apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ", authDomain: "investpro-data.firebaseapp.com", projectId: "investpro-data", storageBucket: "investpro-data.firebasestorage.app", messagingSenderId: "91038630825", appId: "1:91038630825:web:fba110e17307e1ad4abab8" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
 
-        let selectedAmount = 0, currentUser = null;
-        let adminBank = { bankId: "mbbank", stk: "00003052009", name: "NGUYEN THE ANH" };
+        let selectedAmount = 0, currentUser = null, adminBank = null;
 
         window.onload = async () => {
             const ss = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
@@ -107,8 +84,16 @@
             const uSnap = await getDoc(doc(db, "users", ss.phone));
             if(uSnap.exists()) currentUser = uSnap.data();
 
+            // LẤY CẤU HÌNH TỪ FIREBASE
             const cfg = await getDoc(doc(db, "config", "bank"));
-            if(cfg.exists()) adminBank = cfg.data();
+            if(cfg.exists()) {
+                adminBank = cfg.data();
+                // Hiển thị sẵn tên để kiểm tra
+                document.getElementById('disp-name').innerText = adminBank.name;
+                document.getElementById('disp-stk').innerText = adminBank.stk;
+            } else {
+                alert("Lỗi: Admin chưa cài đặt thông tin ngân hàng!");
+            }
         };
 
         window.selectAmount = (val, el) => {
@@ -122,19 +107,17 @@
             const inputVal = document.getElementById('custom-amount').value;
             if(inputVal) selectedAmount = Number(inputVal);
             if(selectedAmount < 30000) return alert("Tối thiểu 30k!");
+            if(!adminBank) return alert("Hệ thống đang tải dữ liệu Bank, vui lòng đợi 2 giây...");
 
             document.getElementById('step-1').style.display = 'none';
             document.getElementById('payment-info').style.display = 'block';
             
             const note = "NAP " + (currentUser.id || "0000");
-            
-            // Hiển thị chữ ở các dòng dưới
             document.getElementById('disp-name').innerText = adminBank.name;
             document.getElementById('disp-stk').innerText = adminBank.stk;
             document.getElementById('disp-amt').innerText = selectedAmount.toLocaleString() + "₫";
             document.getElementById('disp-note').innerText = note;
 
-            // Tạo QR (Template compact2 chỉ hiện QR và logo ngân hàng nhỏ)
             const qrUrl = `https://img.vietqr.io/image/${adminBank.bankId}-${adminBank.stk}-compact2.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(note)}&accountName=${encodeURIComponent(adminBank.name)}`;
             document.getElementById('qr-img').src = qrUrl;
         };
@@ -153,7 +136,7 @@
                 const note = "NAP " + (currentUser.id || "0000");
                 hist.unshift({ id: "NAP"+Date.now().toString().slice(-4), type: "Nạp tiền", amount: "+" + selectedAmount.toLocaleString() + " ₫", time: new Date().toLocaleString('vi-VN'), status: "Chờ duyệt", color: "orange", note: note });
                 await updateDoc(userRef, { history: hist });
-                alert("✅ Gửi lệnh thành công! Admin sẽ duyệt tiền cho bạn ngay.");
+                alert("✅ Gửi lệnh thành công! Chờ Admin duyệt.");
                 location.href = "dashboard.html";
             } catch(e) { alert("Lỗi: " + e.message); }
         };
