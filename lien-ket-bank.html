@@ -69,7 +69,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Cấu hình Firebase
+        // Cấu hình Firebase của bạn
         const firebaseConfig = {
             apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
             authDomain: "investpro-data.firebaseapp.com",
@@ -87,7 +87,8 @@
         // KIỂM TRA ĐĂNG NHẬP & TẢI DỮ LIỆU CŨ
         window.onload = async () => {
             const rawSS = localStorage.getItem('thongTinTaiKhoan');
-            if(!rawSS) return location.href="dang-nhap.html";
+            if(!rawSS) return window.location.href="dang-nhap.html";
+            
             const ss = JSON.parse(rawSS);
             currentUserPhone = ss.phone;
 
@@ -96,7 +97,8 @@
                 const userSnap = await getDoc(doc(db, "users", currentUserPhone));
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    // Nếu khách đã liên kết rồi thì điền sẵn vào form
+                    
+                    // Nếu khách đã liên kết rồi thì tự động điền sẵn vào form
                     if (userData.bankInfo) {
                         const parts = userData.bankInfo.split(" - ");
                         if (parts.length >= 3) {
@@ -108,13 +110,14 @@
                     }
                 }
             } catch (err) {
-                console.log("Lỗi tải dữ liệu:", err);
+                console.log("Lỗi tải dữ liệu ngân hàng:", err);
             }
         };
 
-        // LƯU THÔNG TIN LÊN MÁY CHỦ
+        // LƯU THÔNG TIN LÊN MÁY CHỦ FIREBASE
         document.getElementById('bank-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Chặn load lại trang
+            
             const btn = document.getElementById('btn-save');
             const bankName = document.getElementById('bank-name').value;
             const bankAcc = document.getElementById('bank-account').value;
@@ -128,12 +131,12 @@
                 // Ghép thành 1 chuỗi chuẩn định dạng: Tên Ngân Hàng - Số TK - TÊN CHỦ TK
                 const bankString = `${bankName} - ${bankAcc} - ${bankHolder}`;
                 
-                // Đẩy lên Firebase
+                // Đẩy dữ liệu lên Firebase
                 await updateDoc(doc(db, "users", currentUserPhone), {
                     bankInfo: bankString
                 });
 
-                alert("✅ Ràng buộc ngân hàng thành công!");
+                alert("✅ Liên kết ngân hàng thành công!");
                 window.location.href = "dashboard.html"; // Tự động quay về Dashboard
             } catch (err) {
                 alert("Lỗi khi lưu thông tin: " + err.message);
