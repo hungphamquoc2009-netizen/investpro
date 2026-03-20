@@ -441,7 +441,7 @@
             let db = JSON.parse(localStorage.getItem('database_nguoidung'));
             let ss = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
             let uIdx = db.findIndex(u => u.phone === ss.phone);
-            if(db[uIdx].balance < price) return alert("Không đủ tiền! Vui lòng nạp thêm.");
+            if(db[uIdx].balance < price) return alert("Không đủ tiền! Vui lòng nạp thêm!.");
             if(confirm("Xác nhận đầu tư gói " + name + "?")) {
                 db[uIdx].balance -= price;
                 
