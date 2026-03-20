@@ -6,82 +6,65 @@
     <title>Nạp Tiền - INVEST PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background: #f4f7f6; margin: 0; color: #1a202c; padding-bottom: 30px; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7f6; margin: 0; color: #1a202c; }
         .header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
         .back-btn { font-size: 20px; font-weight: bold; margin-right: 15px; cursor: pointer; text-decoration: none; color: #333; }
         .container { padding: 20px; max-width: 500px; margin: 0 auto; }
-        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; }
-        h3 { margin: 0 0 15px 0; font-size: 16px; font-weight: 800; color: #121a8f; }
         
+        .card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; }
+        h3 { margin: 0 0 20px 0; font-size: 18px; font-weight: 800; color: #121a8f; }
+        
+        /* BƯỚC 1: CHỌN TIỀN */
         .amount-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .amount-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 5px; text-align: center; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.2s; }
+        .amount-item { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px 5px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 700; transition: 0.2s; }
         .amount-item.active { background: #121a8f; color: white; border-color: #121a8f; }
-        
-        .input-group label { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; }
-        .input-group input { width: 100%; padding: 14px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 18px; font-weight: 800; outline: none; transition: 0.3s; color: #121a8f; }
+        .input-group input { width: 100%; padding: 15px; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; font-size: 18px; font-weight: 800; outline: none; text-align: center; color: #121a8f; }
 
-        #payment-info { display: none; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* BƯỚC 2: CHỈ CÓ QR */
+        #payment-info { display: none; animation: zoomIn 0.3s ease; }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
-        .qr-box { text-align: center; background: #fff; padding: 15px; border-radius: 12px; border: 2px dashed #121a8f; margin: 15px 0; }
-        .qr-box img { width: 220px; height: 220px; }
+        .qr-wrapper { background: white; padding: 10px; border-radius: 15px; display: inline-block; margin: 20px 0; border: 1px solid #eee; }
+        .qr-wrapper img { width: 280px; height: 280px; display: block; }
         
-        .bank-details { background: #f0f9ff; padding: 15px; border-radius: 12px; font-size: 14px; line-height: 1.8; }
-        .bank-details div { display: flex; justify-content: space-between; border-bottom: 1px solid #e0f2fe; padding: 8px 0; }
-        .bank-details b { color: #121a8f; font-weight: 800; }
-        
-        .btn-main { width: 100%; padding: 16px; background: #121a8f; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 15px; }
-        .btn-copy { background: #e0f2fe; color: #121a8f; border: none; padding: 4px 8px; border-radius: 5px; font-size: 10px; font-weight: 800; cursor: pointer; margin-left: 5px; }
+        .btn-main { width: 100%; padding: 18px; background: #121a8f; color: white; border: none; border-radius: 15px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 10px; }
+        .btn-secondary { background: none; border: none; color: #64748b; font-size: 14px; margin-top: 20px; cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <a href="dashboard.html" class="back-btn">❮</a>
-        <b style="font-size: 18px;">Nạp Tiền Tài Khoản</b>
+        <b style="font-size: 18px;">Nạp Tiền</b>
     </div>
 
     <div class="container">
         <div class="card" id="step-1">
-            <h3>Chọn số tiền nạp</h3>
+            <h3>Chọn số tiền muốn nạp</h3>
             <div class="amount-grid">
-                <div class="amount-item" onclick="selectAmount(60000, this)">60,000₫</div>
-                <div class="amount-item" onclick="selectAmount(120000, this)">120,000₫</div>
-                <div class="amount-item" onclick="selectAmount(300000, this)">300,000₫</div>
-                <div class="amount-item" onclick="selectAmount(500000, this)">500,000₫</div>
-                <div class="amount-item" onclick="selectAmount(1000000, this)">1,000,000₫</div>
-                <div class="amount-item" onclick="selectAmount(5000000, this)">5,000,000₫</div>
+                <div class="amount-item" onclick="selectAmount(60000, this)">60k</div>
+                <div class="amount-item" onclick="selectAmount(200000, this)">200k</div>
+                <div class="amount-item" onclick="selectAmount(500000, this)">500k</div>
+                <div class="amount-item" onclick="selectAmount(1000000, this)">1M</div>
+                <div class="amount-item" onclick="selectAmount(5000000, this)">5M</div>
+                <div class="amount-item" onclick="selectAmount(10000000, this)">10M</div>
             </div>
             <div class="input-group">
-                <label>Số tiền nạp (VNĐ):</label>
                 <input type="number" id="custom-amount" placeholder="Nhập số tiền...">
             </div>
             <button class="btn-main" onclick="goToPayment()">Tiếp Theo</button>
         </div>
 
         <div class="card" id="payment-info">
-            <h3>Chuyển khoản theo nội dung</h3>
-            <div class="bank-details">
-                <div><span>Ngân hàng:</span> <b id="b-bank">...</b></div>
-                <div><span>Số tài khoản:</span> <span><b id="b-stk">...</b> <button class="btn-copy" onclick="copyText('b-stk')">SAO CHÉP</button></span></div>
-                <div><span>Chủ tài khoản:</span> <b id="b-name">...</b></div>
-                <div><span>Số tiền:</span> <b id="b-amt" style="color: #e74c3c;">0₫</b></div>
-                <div style="background: #fff7ed; border: 1px solid #ffedd5; padding: 10px; border-radius: 8px; margin-top: 5px;">
-                    <span style="color: #c2410c; font-weight: bold;">Nội dung chuyển khoản:</span>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
-                        <b id="b-note" style="color: #ea580c; font-size: 18px; letter-spacing: 1px;">NAP 0000</b>
-                        <button class="btn-copy" style="background: #ea580c; color: white;" onclick="copyText('b-note')">SAO CHÉP</button>
-                    </div>
-                </div>
-            </div>
+            <h3 style="margin-bottom: 5px;">Mã QR Thanh Toán</h3>
+            <p style="font-size: 12px; color: #64748b; margin: 0;">Quét mã để nạp tiền tự động</p>
             
-            <div class="qr-box">
-                <p style="font-size: 11px; color: #64748b; margin-top: 0;">Sử dụng App Ngân hàng để quét mã VietQR</p>
-                <img id="qr-img" src="" alt="QR">
+            <div class="qr-wrapper">
+                <img id="qr-img" src="" alt="Mã QR Chuyển Tiền">
             </div>
 
             <button class="btn-main" onclick="submitDeposit()">Tôi Đã Chuyển Khoản</button>
-            <button style="width: 100%; background: none; border: none; color: #64748b; font-size: 13px; margin-top: 15px; cursor: pointer;" onclick="location.reload()">Quay lại chỉnh số tiền</button>
+            <button class="btn-secondary" onclick="location.reload()">Quay lại chỉnh số tiền</button>
         </div>
     </div>
 
@@ -98,20 +81,11 @@
         window.onload = async () => {
             const ss = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
             if(!ss) return location.href="dang-nhap.html";
-            
             const uSnap = await getDoc(doc(db, "users", ss.phone));
-            if(uSnap.exists()) {
-                currentUser = uSnap.data();
-                // Hiển thị nội dung nạp có chứa ID của khách ngay lập tức
-                document.getElementById('b-note').innerText = "NAP " + (currentUser.id || "0000");
-            }
+            if(uSnap.exists()) currentUser = uSnap.data();
 
             const cfg = await getDoc(doc(db, "config", "bank"));
             if(cfg.exists()) adminBank = cfg.data();
-            
-            document.getElementById('b-bank').innerText = adminBank.bankId.toUpperCase();
-            document.getElementById('b-stk').innerText = adminBank.stk;
-            document.getElementById('b-name').innerText = adminBank.name;
         };
 
         window.selectAmount = (val, el) => {
@@ -124,21 +98,16 @@
         window.goToPayment = () => {
             const inputVal = document.getElementById('custom-amount').value;
             if(inputVal) selectedAmount = Number(inputVal);
-            if(selectedAmount < 30000) return alert("Vui lòng nạp tối thiểu 30,000₫");
+            if(selectedAmount < 30000) return alert("Nạp tối thiểu 30,000₫");
 
             document.getElementById('step-1').style.display = 'none';
             document.getElementById('payment-info').style.display = 'block';
-            document.getElementById('b-amt').innerText = selectedAmount.toLocaleString() + "₫";
             
-            const note = document.getElementById('b-note').innerText;
-            const qr = `https://img.vietqr.io/image/${adminBank.bankId}-${adminBank.stk}-compact2.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(note)}&accountName=${encodeURIComponent(adminBank.name)}`;
-            document.getElementById('qr-img').src = qr;
-        };
-
-        window.copyText = (id) => {
-            const text = document.getElementById(id).innerText;
-            navigator.clipboard.writeText(text);
-            alert("Đã sao chép: " + text);
+            // Tạo nội dung NAP + ID người dùng
+            const note = "NAP " + (currentUser.id || "0000");
+            const qrUrl = `https://img.vietqr.io/image/${adminBank.bankId}-${adminBank.stk}-compact2.png?amount=${selectedAmount}&addInfo=${encodeURIComponent(note)}&accountName=${encodeURIComponent(adminBank.name)}`;
+            
+            document.getElementById('qr-img').src = qrUrl;
         };
 
         window.submitDeposit = async () => {
@@ -146,7 +115,7 @@
                 const userRef = doc(db, "users", currentUser.phone);
                 const userSnap = await getDoc(userRef);
                 let hist = userSnap.data().history || [];
-                const note = document.getElementById('b-note').innerText;
+                const note = "NAP " + (currentUser.id || "0000");
 
                 hist.unshift({ 
                     id: "NAP"+Date.now().toString().slice(-4), 
@@ -155,11 +124,11 @@
                     time: new Date().toLocaleString('vi-VN'), 
                     status: "Chờ duyệt", 
                     color: "orange",
-                    note: note // Lưu kèm nội dung nạp để admin dễ đối soát
+                    note: note 
                 });
 
                 await updateDoc(userRef, { history: hist });
-                alert("✅ Yêu cầu đã được gửi! Admin sẽ duyệt sau khi nhận được tiền.");
+                alert("✅ Đã gửi lệnh! Admin sẽ kiểm tra mã " + note + " và duyệt tiền cho bạn.");
                 location.href = "dashboard.html";
             } catch(e) { alert("Lỗi: " + e.message); }
         };
