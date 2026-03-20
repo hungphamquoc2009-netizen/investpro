@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rút Tiền</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #e74c3c; --bg: #f0f3f7; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        .header { background: white; padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; }
+        .back-btn { text-decoration: none; color: #333; font-size: 20px; margin-right: 15px; font-weight: bold; }
+        
+        .card { background: white; padding: 25px 20px; margin: 15px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .balance-box { text-align: center; margin-bottom: 25px; }
+        .balance-box span { font-size: 14px; color: #888; }
+        .balance-box .money { font-size: 36px; font-weight: 800; color: #333; margin-top: 5px; }
+        
+        /* Thẻ ngân hàng rút tiền */
+        .bank-info-box { background: #fdf2f2; border: 1px solid #fab1a0; padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .bank-icon { font-size: 30px; }
+        .bank-details { flex: 1; }
+        .bank-details b { display: block; color: var(--primary); font-size: 16px; margin-bottom: 3px; }
+        .bank-details span { font-size: 12px; color: #666; }
+        .btn-change { font-size: 12px; color: var(--primary); font-weight: bold; text-decoration: none; }
+
+        label { font-size: 13px; font-weight: bold; color: #555; display: block; margin-bottom: 8px; }
+        input { width: 100%; padding: 15px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; outline: none; font-size: 18px; font-weight: bold; background: #f9f9f9; }
+        input:focus { border-color: var(--primary); background: white; }
+
+        .btn-submit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3); }
+        .btn-submit:active { transform: scale(0.98); }
+        
+        .note { font-size: 12px; color: #888; margin-top: 15px; line-height: 1.6; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="dashboard.html" class="back-btn">❮</a>
+    <b style="font-size: 16px;">Rút Tiền Hệ Thống</b>
+</div>
+
+<div class="card">
+    <div class="balance-box">
+        <span>Số dư khả dụng</span>
+        <div class="money" id="view-balance">0 ₫</div>
+    </div>
+
+    <div class="bank-info-box">
+        <div class="bank-icon">🏦</div>
+        <div class="bank-details">
+            <b id="show-bank">Đang tải...</b>
+            <span id="show-stk">Đang tải...</span><br>
+            <span id="show-owner" style="font-weight: bold;">---</span>
+        </div>
+        <a href="lien-ket-bank.html" class="btn-change">Thay đổi</a>
+    </div>
+
+    <label>Nhập số tiền cần rút (VNĐ)</label>
+    <input type="number" id="w-amount" placeholder="VD: 100000">
+
+    <button class="btn-submit" onclick="requestWithdraw()">YÊU CẦU RÚT TIỀN</button>
+
+    <div class="note">
+        <b style="color: #e74c3c;">* Điều kiện: Cần đầu tư ít nhất 1 gói để được rút tiền.</b><br>
+        Min rút: 100,000đ • Phí rút: 0%<br>
+        Thời gian xử lý: 5 - 30 phút.
+    </div>
+</div>
+
+<script>
+    const session = JSON.parse(localStorage.getItem('thongTinTaiKhoan'));
+    const db = JSON.parse(localStorage.getItem('database_nguoidung')) || [];
+    const user = db.find(u => u.phone === session.phone);
+
+    window.onload = function() {
+        // KIỂM TRA: Nếu chưa liên kết ngân hàng, ép chuyển trang
+        if (!user.bankInfo) {
+            alert("Bạn phải liên kết ngân hàng trước khi thực hiện rút tiền!");
+            window.location.href = "lien-ket-bank.html";
+            return;
+        }
+
+        // Hiện số dư và thông tin ngân hàng
+        document.getElementById('view-balance').innerText = user.balance.toLocaleString() + " ₫";
+        document.getElementById('show-bank').innerText = user.bankInfo.bankName;
+        document.getElementById('show-stk').innerText = "STK: " + user.bankInfo.stk;
+        document.getElementById('show-owner').innerText = user.bankInfo.owner;
+    }
+
+    function requestWithdraw() {
+        const amount = Number(document.getElementById('w-amount').value);
+
+        // Các kiểm tra cơ bản
+        if(!amount || amount < 100000) return alert("Số tiền rút tối thiểu là 100,000đ");
+        if(amount > user.balance) return alert("Số dư khả dụng không đủ!");
+
+        // --- KIỂM TRA ĐIỀU KIỆN MỚI: PHẢI CÓ LỊCH SỬ MUA GÓI ĐẦU TƯ ---
+        const hasInvested = user.history && user.history.some(h => h.type.includes("Đầu tư"));
+        if (!hasInvested) {
+            return alert("❌ Từ chối: Bạn cần phải Đầu tư ít nhất 1 sản phẩm trước khi có thể thực hiện rút tiền (bao gồm cả tiền nạp và hoa hồng)!");
+        }
+
+        // Gửi lệnh kèm thông tin ngân hàng mặc định
+        const order = {
+            orderId: "OUT" + Date.now().toString().slice(-6),
+            phone: user.phone,
+            userName: user.name,
+            amount: amount,
+            bankInfo: `${user.bankInfo.bankName} | ${user.bankInfo.stk} | ${user.bankInfo.owner}`,
+            type: "Rút tiền",
+            status: "Chờ duyệt",
+            time: new Date().toLocaleString()
+        };
+
+        let withdraws = JSON.parse(localStorage.getItem("database_lenh_rut")) || [];
+        withdraws.push(order);
+        localStorage.setItem("database_lenh_rut", JSON.stringify(withdraws));
+
+        alert("✅ Lệnh rút đã được gửi! Vui lòng chờ Admin xử lý.");
+        window.location.href = "lich-su-giao-dich.html"; 
+    }
+</script>
+</body>
+</html>

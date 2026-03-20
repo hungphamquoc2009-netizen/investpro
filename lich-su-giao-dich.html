@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Giao Dịch</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #121a8f; --orange: #ff9800; }
+        body { font-family: 'Inter', sans-serif; background: #f4f7f6; margin: 0; padding: 0; }
+        
+        .header { background: white; padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10; }
+        .back-btn { text-decoration: none; color: #333; font-size: 20px; margin-right: 15px; font-weight: bold; }
+        
+        /* THANH TAB PHÂN LOẠI */
+        .tabs-container { background: white; padding: 10px 15px; display: flex; gap: 10px; overflow-x: auto; white-space: nowrap; position: sticky; top: 54px; z-index: 9; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .tabs-container::-webkit-scrollbar { display: none; } /* Ẩn thanh cuộn */
+        .tab-btn { padding: 6px 15px; background: #f0f3f7; color: #666; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
+        .tab-btn.active { background: #e8ebfc; color: var(--primary); border-color: var(--primary); }
+
+        /* DANH SÁCH LỊCH SỬ */
+        .list-container { padding: 15px; }
+        .history-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .h-left { display: flex; flex-direction: column; }
+        .h-type { font-weight: 800; font-size: 14px; color: #333; margin-bottom: 4px; }
+        .h-time { font-size: 11px; color: #888; }
+        
+        .h-right { text-align: right; }
+        .h-amount { font-weight: 800; font-size: 16px; margin-bottom: 4px; display: block; }
+        .h-status { font-size: 11px; font-weight: bold; padding: 3px 6px; border-radius: 6px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="dashboard.html" class="back-btn">❮</a>
+    <b style="font-size: 16px;">Lịch sử giao dịch</b>
+</div>
+
+<div class="tabs-container">
+    <div class="tab-btn active" onclick="filterHistory('all', this)">Tất cả</div>
+    <div class="tab-btn" onclick="filterHistory('nạp', this)">Nạp tiền</div>
+    <div class="tab-btn" onclick="filterHistory('rút', this)">Rút tiền</div>
+    <div class="tab-btn" onclick="filterHistory('đầu tư', this)">Đầu tư</div>
+    <div class="tab-btn" onclick="filterHistory('hoa hồng', this)">Hoa hồng</div>
+</div>
+
+<div class="list-container" id="history-list">
+    </div>
+
+<script>
+    let globalHistory = []; // Lưu trữ toàn bộ lịch sử để lọc
+
+    window.onload = function() {
+        const session = JSON.parse(localStorage.getItem("thongTinTaiKhoan"));
+        const db = JSON.parse(localStorage.getItem("database_nguoidung")) || [];
+        const user = db.find(u => u.phone === session.phone);
+
+        if(!user) return window.location.href = "dang-nhap.html";
+
+        // 1. Lấy lịch sử Cũ (Các lệnh Thành công, Hoa hồng, Mua gói)
+        let allHistory = user.history ? [...user.history] : [];
+
+        // 2. Lấy các lệnh Nạp Tiền (Chờ duyệt / Bị hủy)
+        const deposits = JSON.parse(localStorage.getItem("database_lenh_nap")) || [];
+        deposits.filter(d => d.phone === user.phone && d.status !== "Thành công").forEach(d => {
+            allHistory.unshift({ 
+                type: "Nạp tiền hệ thống",
+                amount: "+" + d.amount.toLocaleString() + " ₫",
+                time: d.time,
+                status: d.status
+            });
+        });
+
+        // 3. Lấy các lệnh Rút Tiền (Chờ duyệt / Bị hủy)
+        const withdraws = JSON.parse(localStorage.getItem("database_lenh_rut")) || [];
+        withdraws.filter(w => w.phone === user.phone && w.status !== "Thành công").forEach(w => {
+            allHistory.unshift({
+                type: "Rút tiền về ngân hàng",
+                amount: "-" + w.amount.toLocaleString() + " ₫",
+                time: w.time,
+                status: w.status
+            });
+        });
+
+        // Lưu vào biến toàn cục để dùng cho bộ lọc
+        globalHistory = allHistory;
+
+        // Mặc định hiển thị tất cả
+        renderHistory(globalHistory);
+    };
+
+    // HÀM HIỂN THỊ DANH SÁCH
+    function renderHistory(data) {
+        const listDiv = document.getElementById("history-list");
+
+        if (data.length > 0) {
+            listDiv.innerHTML = data.map(h => {
+                let currentStatus = h.status || "Thành công"; 
+
+                // Xử lý màu sắc số tiền
+                let amountColor = h.amount.includes('+') ? '#2ecc71' : '#e74c3c';
+                if(currentStatus === "Bị hủy") amountColor = "#999"; 
+
+                // Xử lý màu sắc Trạng thái (Badge)
+                let statusBg = "#e8f8f5"; let statusColor = "#2ecc71"; // Xanh (Thành công)
+                if(currentStatus === "Chờ duyệt") {
+                    statusBg = "#fef5e7"; statusColor = "#f39c12"; // Vàng (Chờ duyệt)
+                } else if (currentStatus === "Bị hủy") {
+                    statusBg = "#fdedec"; statusColor = "#e74c3c"; // Đỏ (Bị hủy)
+                }
+
+                return `
+                    <div class="history-card">
+                        <div class="h-left">
+                            <span class="h-type">${h.type}</span>
+                            <span class="h-time">${h.time}</span>
+                        </div>
+                        <div class="h-right">
+                            <span class="h-amount" style="color: ${amountColor}">${h.amount}</span>
+                            <div class="h-status" style="background: ${statusBg}; color: ${statusColor};">${currentStatus}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } else {
+            listDiv.innerHTML = `
+                <div style="text-align:center; padding: 50px 20px;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">📭</div>
+                    <div style="color: #888; font-size: 14px;">Không có giao dịch nào loại này</div>
+                </div>
+            `;
+        }
+    }
+
+    // HÀM LỌC (FILTER) KHI BẤM VÀO TAB
+    function filterHistory(keyword, element) {
+        // 1. Đổi màu nút Tab đang chọn
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+
+        // 2. Lọc dữ liệu
+        if (keyword === 'all') {
+            renderHistory(globalHistory);
+        } else {
+            // Chuyển cả từ khóa và type về chữ thường để so sánh cho chuẩn
+            const filteredData = globalHistory.filter(h => h.type.toLowerCase().includes(keyword.toLowerCase()));
+            renderHistory(filteredData);
+        }
+    }
+</script>
+
+</body>
+</html>

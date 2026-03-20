@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch Sử Nạp Tiền</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding: 0; }
+        .header { background: #ff9800; color: white; padding: 15px; display: flex; align-items: center; position: sticky; top: 0; }
+        .back-btn { text-decoration: none; color: white; font-size: 20px; margin-right: 15px; }
+        
+        .tabs { display: flex; background: white; border-bottom: 1px solid #eee; }
+        .tab { flex: 1; text-align: center; padding: 15px; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
+        .tab.active { color: #ff9800; border-bottom: 2px solid #ff9800; font-weight: bold; }
+
+        .list-container { padding: 10px; }
+        .order-card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .order-top { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
+        .order-id { font-size: 13px; color: #888; }
+        .order-status { font-size: 13px; font-weight: bold; }
+        
+        .order-info { display: flex; justify-content: space-between; align-items: center; }
+        .amt { font-size: 18px; font-weight: bold; color: #333; }
+        .time { font-size: 12px; color: #999; }
+
+        .status-pending { color: #f39c12; } /* Màu vàng cho Đang chờ */
+        .status-success { color: #2ecc71; } /* Màu xanh cho Thành công */
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="dashboard.html" class="back-btn">❮</a>
+    <b style="flex:1; text-align:center; margin-right:30px;">Lịch sử nạp tiền</b>
+</div>
+
+<div class="tabs">
+    <div class="tab active" onclick="filterOrders('Tất cả', this)">Tất cả</div>
+    <div class="tab" onclick="filterOrders('Chờ duyệt', this)">Đang chờ</div>
+    <div class="tab" onclick="filterOrders('Thành công', this)">Thành công</div>
+</div>
+
+<div class="list-container" id="order-list">
+    </div>
+
+<script>
+    const session = JSON.parse(localStorage.getItem("thongTinTaiKhoan"));
+
+    function renderOrders(filterStatus = "Tất cả") {
+        const allOrders = JSON.parse(localStorage.getItem("database_lenh_nap")) || [];
+        // Chỉ lấy đơn của chính người đang đăng nhập
+        const myOrders = allOrders.filter(o => o.phone === session.phone);
+        const listDiv = document.getElementById("order-list");
+        listDiv.innerHTML = "";
+
+        myOrders.forEach(order => {
+            // Lọc theo tab
+            if (filterStatus !== "Tất cả" && order.status !== filterStatus) return;
+
+            const statusClass = order.status === "Thành công" ? "status-success" : "status-pending";
+            
+            listDiv.innerHTML += `
+                <div class="order-card">
+                    <div class="order-top">
+                        <span class="order-id">Mã đơn: ${order.orderId}</span>
+                        <span class="order-status ${statusClass}">${order.status}</span>
+                    </div>
+                    <div class="order-info">
+                        <div>
+                            <div class="amt">+${order.amount.toLocaleString()} ₫</div>
+                            <div class="time">${order.time}</div>
+                        </div>
+                        <div style="font-size: 12px; color: #666;">VietQR</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (listDiv.innerHTML === "") {
+            listDiv.innerHTML = "<p style='text-align:center; color:#999; margin-top:50px;'>Chưa có dữ liệu giao dịch</p>";
+        }
+    }
+
+    function filterOrders(status, el) {
+        // Đổi màu tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        // Load lại danh sách
+        renderOrders(status);
+    }
+
+    // Chạy ngay khi vào trang
+    window.onload = () => renderOrders();
+</script>
+
+</body>
+</html>
