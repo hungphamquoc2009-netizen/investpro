@@ -21,7 +21,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* STATS CARDS */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 25px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px; }
         .stat-card { background: white; padding: 20px; border-radius: 12px; border-bottom: 4px solid var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .stat-card h4 { margin: 0; color: #666; font-size: 11px; text-transform: uppercase; }
         .stat-card div { font-size: 20px; font-weight: 800; margin-top: 10px; }
@@ -83,7 +83,7 @@
                 <div><label style="font-size:12px; font-weight:bold;">Tiêu đề Popup</label><input type="text" id="cfg-title" style="width:100%; padding:10px; margin:5px 0; border:1px solid #ddd; border-radius:6px;"></div>
             </div>
             <label style="font-size:12px; font-weight:bold;">Nội dung thông báo</label>
-            <textarea id="cfg-content" rows="3" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:6px;"></textarea>
+            <textarea id="cfg-content" rows="3" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ddd; border-radius:6px; font-family:inherit;"></textarea>
             <button class="btn btn-success" style="margin-top:10px;" onclick="saveSystemConfig()">LƯU THÔNG TIN CSKH</button>
         </div>
     </div>
@@ -120,17 +120,24 @@
 
     <div id="tab-products" class="tab-page">
         <div class="card">
-            <h3>📦 Thêm Gói Đầu Tư Mới</h3>
+            <h3 id="p-form-title">📦 Thêm Gói Đầu Tư Mới</h3>
+            <input type="hidden" id="p-id-edit">
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
                 <input type="text" id="p-name" placeholder="Tên gói (VIP 1...)">
                 <input type="number" id="p-price" placeholder="Giá (VNĐ)">
                 <input type="number" id="p-profit" placeholder="Lãi %/ngày">
                 <input type="number" id="p-days" placeholder="Thời hạn (Ngày)">
             </div>
-            <button class="btn btn-success" style="margin-top:10px;" onclick="saveProduct()">THÊM SẢN PHẨM</button>
+            <div style="margin-top: 15px; display: flex; gap: 10px;">
+                <button id="btn-save-product" class="btn btn-success" style="padding: 10px 30px" onclick="saveProduct()">THÊM SẢN PHẨM</button>
+                <button id="btn-cancel-product" class="btn btn-warning" style="display:none; padding: 10px 30px" onclick="cancelEditProduct()">HỦY CHỈNH SỬA</button>
+            </div>
         </div>
         <div class="card">
-            <table><thead><tr><th>Tên gói</th><th>Giá gói</th><th>Lãi/Ngày</th><th>Thao tác</th></tr></thead><tbody id="product-list"></tbody></table>
+            <table>
+                <thead><tr><th>Tên gói</th><th>Giá gói</th><th>Lãi/Ngày</th><th>Thời hạn</th><th>Thao tác</th></tr></thead>
+                <tbody id="product-list"></tbody>
+            </table>
         </div>
     </div>
 
@@ -152,6 +159,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+
+    // Lưu trữ tạm danh sách sản phẩm để sửa cho nhanh
+    let currentProducts = [];
 
     window.showTab = (id, el) => {
         document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
@@ -194,17 +204,88 @@
             document.getElementById('stat-total-withdrawn').innerText = totalW.toLocaleString() + " ₫";
         });
 
+        // Tải sản phẩm
         onSnapshot(collection(db, "products"), (snap) => {
             let html = '';
+            currentProducts = [];
             snap.forEach(d => {
                 const p = d.data();
-                html += `<tr><td><b>${p.name}</b></td><td>${Number(p.price).toLocaleString()}₫</td><td>${p.profit}%</td><td><button class="btn btn-danger" onclick="deleteProduct('${p.id}')">Xóa</button></td></tr>`;
+                currentProducts.push(p);
+                html += `
+                    <tr>
+                        <td><b>${p.name}</b></td>
+                        <td>${Number(p.price).toLocaleString()}₫</td>
+                        <td>${p.profit}%</td>
+                        <td>${p.days || 90} ngày</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="loadEditProduct('${p.id}')">Sửa</button>
+                            <button class="btn btn-danger" style="margin-left:5px" onclick="deleteProduct('${p.id}')">Xóa</button>
+                        </td>
+                    </tr>`;
             });
             document.getElementById('product-list').innerHTML = html;
         });
     }
 
-    // --- CÁC HÀM XỬ LÝ ---
+    // --- QUẢN LÝ SẢN PHẨM (THÊM / SỬA / XÓA) ---
+    window.loadEditProduct = (id) => {
+        const p = currentProducts.find(item => item.id === id);
+        if(p) {
+            document.getElementById('p-id-edit').value = p.id;
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-price').value = p.price;
+            document.getElementById('p-profit').value = p.profit;
+            document.getElementById('p-days').value = p.days || 90;
+
+            document.getElementById('p-form-title').innerText = "⚙️ Chỉnh Sửa Gói Đầu Tư";
+            document.getElementById('btn-save-product').innerText = "CẬP NHẬT GÓI";
+            document.getElementById('btn-save-product').style.background = "var(--warning)";
+            document.getElementById('btn-cancel-product').style.display = "inline-block";
+        }
+    };
+
+    window.cancelEditProduct = () => {
+        document.getElementById('p-id-edit').value = '';
+        document.getElementById('p-name').value = '';
+        document.getElementById('p-price').value = '';
+        document.getElementById('p-profit').value = '';
+        document.getElementById('p-days').value = '';
+
+        document.getElementById('p-form-title').innerText = "📦 Thêm Gói Đầu Tư Mới";
+        document.getElementById('btn-save-product').innerText = "THÊM SẢN PHẨM";
+        document.getElementById('btn-save-product').style.background = "var(--success)";
+        document.getElementById('btn-cancel-product').style.display = "none";
+    };
+
+    window.saveProduct = async () => {
+        const idEdit = document.getElementById('p-id-edit').value;
+        const name = document.getElementById('p-name').value;
+        const price = document.getElementById('p-price').value;
+        const profit = document.getElementById('p-profit').value;
+        const days = document.getElementById('p-days').value;
+
+        if(!name || !price || !profit) return alert("Vui lòng nhập đủ thông tin!");
+
+        const id = idEdit || "PRO" + Date.now();
+        const data = { 
+            id: id, 
+            name: name, 
+            price: Number(price), 
+            profit: profit, 
+            days: days, 
+            badge: "Phổ biến" 
+        };
+
+        try {
+            await setDoc(doc(db, "products", id), data);
+            alert(idEdit ? "Cập nhật thành công!" : "Thêm mới thành công!");
+            cancelEditProduct();
+        } catch(e) { alert("Lỗi: " + e.message); }
+    };
+
+    window.deleteProduct = async (id) => { if(confirm("Xóa gói này?")) await deleteDoc(doc(db, "products", id)); };
+
+    // --- CÁC HÀM XỬ LÝ KHÁC (NẠP, RÚT, BANK) ---
     window.processOrder = async (phone, hIndex, type, action) => {
         if(!confirm("Xác nhận thao tác này?")) return;
         const userRef = doc(db, "users", phone);
@@ -214,7 +295,7 @@
         
         let newBalance = u.balance || 0;
         if(type === 'NAP' && action === 'Thành công') { newBalance += val; await updateDoc(userRef, { status: "Đã kích hoạt" }); }
-        if(type === 'RUT' && action === 'Bị hủy') { newBalance += val; } // Hoàn tiền nếu từ chối rút
+        if(type === 'RUT' && action === 'Bị hủy') { newBalance += val; } 
 
         newHist[hIndex].status = action;
         newHist[hIndex].color = action === 'Thành công' ? 'green' : 'red';
@@ -242,18 +323,10 @@
         const cskh = document.getElementById('cfg-cskh').value;
         const title = document.getElementById('cfg-title').value;
         const content = document.getElementById('cfg-content').value;
-        await setDoc(doc(db, "config", "notice"), { cskh, title, content });
+        await setDoc(doc(db, "config", "notice"), { cskh, title, content }, { merge: true });
         localStorage.setItem("admin_cskh_link", cskh);
         alert("Đã lưu cấu hình!");
     };
-
-    window.saveProduct = async () => {
-        const id = "PRO" + Date.now();
-        await setDoc(doc(db, "products", id), { id, name: document.getElementById('p-name').value, price: Number(document.getElementById('p-price').value), profit: document.getElementById('p-profit').value, days: document.getElementById('p-days').value });
-        alert("Thêm thành công!");
-    };
-
-    window.deleteProduct = async (id) => { if(confirm("Xóa gói này?")) await deleteDoc(doc(db, "products", id)); };
 
     window.onload = async () => {
         initData();
