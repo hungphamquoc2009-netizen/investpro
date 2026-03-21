@@ -253,13 +253,15 @@
         };
 
         // HÀM MỞ CSKH (Đọc link từ localStorage do Admin cài)
-        window.openCSKH = () => {
-            const link = localStorage.getItem("admin_cskh_link");
-            if(link && link.trim() !== "") {
-                window.open(link, '_blank');
-            } else {
-                alert("Vui lòng liên hệ Admin để cài đặt Link hỗ trợ!");
-            }
+window.openCSKH = async () => {
+            try {
+                const snap = await getDoc(doc(db, "config", "notice"));
+                if (snap.exists() && snap.data().cskh) {
+                    window.open(snap.data().cskh, '_blank');
+                } else {
+                    alert("Admin chưa cài đặt Link hỗ trợ!");
+                }
+            } catch (e) { console.log("Lỗi tải link CSKH:", e); }
         };
 
         // POPUP CẬP NHẬT THÔNG TIN
