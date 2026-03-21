@@ -436,6 +436,7 @@ window.openCSKH = async () => {
         };
 
         // Hàm Tải Dữ Liệu Đội Nhóm được tách ra riêng (Giải quyết lỗi Vượt Quota của Firebase)
+// Hàm Tải Dữ Liệu Đội Nhóm bằng chiến thuật "Quét bủa vây"
         window.loadTeamData = async () => {
             if (!currentUser) return;
             try {
@@ -450,7 +451,7 @@ window.openCSKH = async () => {
                 };
 
                 const renderRow = (u, level, dep, comm) => {
-                    let safePhone = u.phone || "0000000000"; // Sửa lỗi bị null số điện thoại
+                    let safePhone = u.phone || "0000000000"; 
                     let hiddenPhone = safePhone.substring(0,4) + "***" + safePhone.slice(-3);
                     let colorLvl = level === 'F1' ? '#ff9800' : (level === 'F2' ? '#3498db' : '#9b59b6');
                     return `<div class="f1-item">
@@ -469,8 +470,21 @@ window.openCSKH = async () => {
                 let countTotal = 0;
                 let htmlList = '';
 
-                // Lấy F1
-                const qF1 = query(collection(db, "users"), where("referredBy", "==", currentUser.phone));
+                // Hàm gom tất cả các trường hợp mã mời (Số điện thoại, ID chữ, ID số)
+                const getPossibleCodes = (userObj) => {
+                    let codes = [];
+                    if (userObj.phone) codes.push(String(userObj.phone));
+                    if (userObj.id) {
+                        codes.push(String(userObj.id));
+                        if (!isNaN(userObj.id)) codes.push(Number(userObj.id));
+                    }
+                    if (codes.length === 0) codes.push("INVALID_999");
+                    return [...new Set(codes)]; // Lọc các giá trị trùng nhau
+                };
+
+                // LẤY F1
+                let myCodes = getPossibleCodes(currentUser);
+                const qF1 = query(collection(db, "users"), where("referredBy", "in", myCodes));
                 const snapF1 = await getDocs(qF1);
                 let f1Docs = []; snapF1.forEach(d => f1Docs.push(d.data()));
                 countTotal += f1Docs.length;
@@ -481,8 +495,9 @@ window.openCSKH = async () => {
                     totalCommission += comm1;
                     htmlList += renderRow(f1, 'F1', dep1, comm1);
 
-                    // Lấy F2
-                    const qF2 = query(collection(db, "users"), where("referredBy", "==", f1.phone));
+                    // LẤY F2
+                    let f1Codes = getPossibleCodes(f1);
+                    const qF2 = query(collection(db, "users"), where("referredBy", "in", f1Codes));
                     const snapF2 = await getDocs(qF2);
                     let f2Docs = []; snapF2.forEach(d => f2Docs.push(d.data()));
                     countTotal += f2Docs.length;
@@ -493,8 +508,9 @@ window.openCSKH = async () => {
                         totalCommission += comm2;
                         htmlList += renderRow(f2, 'F2', dep2, comm2);
 
-                        // Lấy F3
-                        const qF3 = query(collection(db, "users"), where("referredBy", "==", f2.phone));
+                        // LẤY F3
+                        let f2Codes = getPossibleCodes(f2);
+                        const qF3 = query(collection(db, "users"), where("referredBy", "in", f2Codes));
                         const snapF3 = await getDocs(qF3);
                         let f3Docs = []; snapF3.forEach(d => f3Docs.push(d.data()));
                         countTotal += f3Docs.length;
