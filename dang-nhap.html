@@ -3,88 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Nhập / Đăng Ký - INVEST PRO</title>
+    <title>Đăng Nhập - INVEST PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f4f6f9 0%, #e0e5ec 100%); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .auth-container { background-color: #fff; width: 100%; max-width: 400px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
-        .auth-header { background-color: #121a8f; padding: 20px; text-align: center; }
-        .auth-header h2 { color: white; margin: 0 0 15px 0; font-weight: 900; letter-spacing: 1px; }
-        .tab-group { display: flex; background-color: rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 5px; }
-        .tab-btn { flex: 1; padding: 10px; text-align: center; color: white; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.3s; font-size: 14px; }
-        .tab-btn.active { background-color: #fff; color: #121a8f; }
-        .form-area { padding: 30px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #555; font-size: 14px; font-weight: 500; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; transition: border-color 0.3s; }
-        .form-group input:focus { outline: none; border-color: #121a8f; }
-        .submit-btn { width: 100%; padding: 14px; background-color: #2ecc71; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .submit-btn:hover { background-color: #27ae60; }
-        .submit-btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-        .util-links { display: flex; justify-content: space-between; margin-top: 20px; font-size: 13px; }
-        .util-links a { color: #121a8f; text-decoration: none; }
-        .util-links a:hover { text-decoration: underline; }
-        #register-form { display: none; }
+        :root { --primary: #121a8f; --bg: #f4f7f6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #1a202c; }
+        
+        .auth-container { background: white; width: 100%; max-width: 400px; padding: 35px 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; margin: 20px; }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo h1 { margin: 0; color: var(--primary); font-size: 28px; font-weight: 900; letter-spacing: -1px; }
+        .logo p { margin: 5px 0 0 0; font-size: 13px; color: #718096; }
+        
+        .input-group { margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 800; color: #4a5568; margin-bottom: 8px; text-transform: uppercase; }
+        .input-group input { width: 100%; padding: 14px 15px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; box-sizing: border-box; font-family: 'Inter', sans-serif; background: #f8fafc; }
+        .input-group input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(18, 26, 143, 0.1); }
+        
+        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
+        .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
+        
+        .auth-links { text-align: center; margin-top: 25px; font-size: 13px; color: #4a5568; }
+        .auth-links a { color: var(--primary); font-weight: 800; text-decoration: none; }
     </style>
 </head>
 <body>
 
     <div class="auth-container">
-        <div class="auth-header">
-            <h2>INVEST PRO</h2>
-            <div class="tab-group">
-                <div class="tab-btn active" id="tab-login" onclick="switchTab('login')">Đăng Nhập</div>
-                <div class="tab-btn" id="tab-register" onclick="switchTab('register')">Đăng Ký</div>
-            </div>
+        <div class="logo">
+            <h1>INVEST PRO</h1>
+            <p>Đăng nhập để quản lý tài sản</p>
         </div>
 
-        <div class="form-area">
-            <form id="login-form">
-                <div class="form-group">
-                    <label>Số điện thoại hoặc ID</label>
-                    <input type="text" id="login-phone" placeholder="VD: 0988... hoặc 0001" required>
-                </div>
-                <div class="form-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="login-pass" placeholder="Nhập mật khẩu" required>
-                </div>
-                <button type="submit" class="submit-btn" id="btn-login">Đăng Nhập</button>
-                <div class="util-links">
-                    <a href="#">Quên mật khẩu??</a>
-                    <a href="index.html">← Về Trang chủ</a>
-                </div>
-            </form>
-
-            <form id="register-form">
-                <div class="form-group">
-                    <label>Họ và Tên</label>
-                    <input type="text" id="reg-name" placeholder="Ví dụ: Nguyen Van A" required>
-                </div>
-                <div class="form-group">
-                    <label>Số điện thoại</label>
-                    <input type="tel" id="reg-phone" placeholder="Nhập số điện thoại (10 số)" required>
-                </div>
-                <div class="form-group">
-                    <label>Mật khẩu</label>
-                    <input type="password" id="reg-pass" placeholder="Tối thiểu 8 ký tự" required>
-                </div>
-                <div class="form-group">
-                    <label style="color: #e74c3c; font-weight: bold;">Mã Mời (Nếu có)</label>
-                    <input type="text" id="reg-invite" placeholder="Ví dụ: 0001" style="border-color: #f1c40f;">
-                </div>
-                <button type="submit" class="submit-btn" id="btn-register">Tạo Tài Khoản</button>
-                <div class="util-links">
-                    <div style="flex:1"></div>
-                    <a href="index.html">← Về Trang chủ</a>
-                </div>
-            </form>
+        <div class="input-group">
+            <label>Số điện thoại</label>
+            <input type="tel" id="log-phone" placeholder="Nhập số điện thoại...">
+        </div>
+        <div class="input-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="log-pass" placeholder="Nhập mật khẩu...">
+        </div>
+        
+        <button class="btn-submit" id="btn-login" onclick="loginAccount()">Đăng Nhập</button>
+        
+        <div class="auth-links">
+            Chưa có tài khoản? <a href="dang-ky.html">Đăng ký ngay</a>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // Cấu hình Firebase của bạn
         const firebaseConfig = {
             apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
             authDomain: "investpro-data.firebaseapp.com",
@@ -98,123 +68,60 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- HÀM CHUYỂN TAB (Đăng nhập / Đăng ký) ---
-        window.switchTab = function(tab) {
-            document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
-            document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
-            document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-            document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-        }
-
-        // ================= XỬ LÝ ĐĂNG KÝ (FIREBASE) =================
-        document.getElementById('register-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); // CHẶN LOAD LẠI TRANG
-            
-            const btn = document.getElementById('btn-register');
-            const name = document.getElementById('reg-name').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-            const pass = document.getElementById('reg-pass').value;
-            const inviteCode = document.getElementById('reg-invite').value.trim();
-
-            if (!/^0\d{9}$/.test(phone)) return alert("Số điện thoại phải có 10 số!");
-            if (pass.length < 8) return alert("Mật khẩu phải có ít nhất 8 ký tự!");
-
-            btn.disabled = true;
-            btn.innerText = "Đang xử lý...";
-
-            try {
-                // Kiểm tra xem SĐT đã tồn tại trên mây chưa
-                const userSnap = await getDoc(doc(db, "users", phone));
-                if (userSnap.exists()) {
-                    alert("Số điện thoại này đã được sử dụng!");
-                    btn.disabled = false;
-                    btn.innerText = "Tạo Tài Khoản";
-                    return;
-                }
-
-                // Lấy tổng số user để tạo ID ngẫu nhiên hoặc tịnh tiến
-                const allUsers = await getDocs(collection(db, "users"));
-                const newId = (allUsers.size + 1).toString().padStart(4, '0');
-
-                const newUser = {
-                    id: newId,
-                    name: name,
-                    phone: phone,
-                    password: pass,
-                    balance: 0,
-                    status: 'Chưa kích hoạt',
-                    referredBy: inviteCode || null,
-                    investments: [],
-                    history: [],
-                    createdAt: Date.now()
-                };
-
-                // Đẩy dữ liệu lên Firebase
-                await setDoc(doc(db, "users", phone), newUser);
-                
-                alert(`🎉 Đăng ký thành công!\nID của bạn là: #${newId}\nVui lòng đăng nhập.`);
-                document.getElementById('register-form').reset();
-                window.switchTab('login');
-                document.getElementById('login-phone').value = phone;
-
-            } catch (err) {
-                alert("Lỗi đăng ký: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Tạo Tài Khoản";
+        // Chặn người dùng nếu đã đăng nhập rồi thì cho vào thẳng Dashboard
+        window.onload = () => {
+            if(localStorage.getItem('thongTinTaiKhoan')) {
+                window.location.href = "dashboard.html";
             }
-        });
+        };
 
-        // ================= XỬ LÝ ĐĂNG NHẬP (FIREBASE) =================
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault(); // CHẶN LOAD LẠI TRANG
-            
+        window.loginAccount = async () => {
+            const phone = document.getElementById('log-phone').value.trim();
+            const pass = document.getElementById('log-pass').value.trim();
+
+            if (!phone || !pass) {
+                return alert("⚠️ Vui lòng nhập số điện thoại và mật khẩu!");
+            }
+
             const btn = document.getElementById('btn-login');
-            const input = document.getElementById('login-phone').value.trim();
-            const pass = document.getElementById('login-pass').value;
-
             btn.disabled = true;
             btn.innerText = "Đang kiểm tra...";
 
             try {
-                let user = null;
-                
-                // 1. Thử tìm theo Số điện thoại
-                const snapPhone = await getDoc(doc(db, "users", input));
-                if (snapPhone.exists()) {
-                    user = snapPhone.data();
-                } else {
-                    // 2. Thử tìm theo Mã ID (nếu khách nhập 0001, 0002)
-                    const q = query(collection(db, "users"), where("id", "==", input));
-                    const snapId = await getDocs(q);
-                    if (!snapId.empty) user = snapId.docs[0].data();
-                }
+                const userRef = doc(db, "users", phone);
+                const userSnap = await getDoc(userRef);
 
-                // 3. Kiểm tra mật khẩu
-                if (user && user.password === pass) {
-                    if (user.status === 'Đã Khóa') {
-                        alert("Tài khoản của bạn đã bị khóa!");
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    if (userData.password === pass) {
+                        // Đăng nhập thành công, lưu thông tin vào máy
+                        localStorage.setItem('thongTinTaiKhoan', JSON.stringify({
+                            phone: userData.phone,
+                            name: userData.name
+                        }));
+                        window.location.href = "dashboard.html";
+                    } else {
+                        alert("❌ Sai mật khẩu!");
                         btn.disabled = false;
                         btn.innerText = "Đăng Nhập";
-                        return;
                     }
-                    
-                    // LƯU PHIÊN ĐĂNG NHẬP VÀO TRÌNH DUYỆT ĐỂ DÙNG CHO DASHBOARD
-                    localStorage.setItem('thongTinTaiKhoan', JSON.stringify({
-                        phone: user.phone,
-                        name: user.name
-                    }));
-                    
-                    // Chuyển hướng
-                    window.location.href = "dashboard.html";
                 } else {
-                    alert("Tài khoản hoặc mật khẩu không chính xác!");
+                    alert("❌ Tài khoản không tồn tại!");
+                    btn.disabled = false;
+                    btn.innerText = "Đăng Nhập";
                 }
-            } catch (err) {
-                alert("Lỗi kết nối Firebase: " + err.message);
-            } finally {
+            } catch (error) {
+                console.error(error);
+                alert("❌ Lỗi kết nối máy chủ!");
                 btn.disabled = false;
                 btn.innerText = "Đăng Nhập";
+            }
+        };
+
+        // Bấm Enter để đăng nhập
+        document.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                loginAccount();
             }
         });
     </script>
