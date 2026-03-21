@@ -258,21 +258,40 @@
         });
     }
 
-    // XỬ LÝ LỆNH
+    // ĐÃ SỬA: Gộp update để an toàn dữ liệu và tối ưu số lần ghi Firebase
     window.processOrder = async (phone, orderId, type, action) => {
-        if(!confirm("Xác nhận?")) return;
+        if(!confirm("Xác nhận " + action + " đơn này?")) return;
+        
         const userRef = doc(db, "users", phone);
         const snap = await getDoc(userRef);
-        const u = snap.data(); let newHist = [...u.history];
+        if(!snap.exists()) return;
+        
+        const u = snap.data(); 
+        let newHist = [...(u.history || [])];
         const hIdx = newHist.findIndex(h => h.id === orderId);
+        
         if(hIdx === -1) return;
+        
         const val = Number(newHist[hIdx].amount.replace(/[^0-9]/g, ''));
         let newBalance = u.balance || 0;
-        if(type === 'NAP' && action === 'Thành công') { newBalance += val; await updateDoc(userRef, { status: "Đã kích hoạt" }); }
-        if(type === 'RUT' && action === 'Bị hủy') { newBalance += val; }
-        newHist[hIdx].status = action; newHist[hIdx].color = action === 'Thành công' ? 'green' : 'red';
-        await updateDoc(userRef, { balance: newBalance, history: newHist });
-        alert("Xong!");
+        let updates = {};
+        
+        if(type === 'NAP' && action === 'Thành công') { 
+            newBalance += val; 
+            updates.status = "Đã kích hoạt"; 
+        }
+        if(type === 'RUT' && action === 'Bị hủy') { 
+            newBalance += val; // Hoàn tiền lại ví nếu từ chối lệnh rút
+        }
+        
+        newHist[hIdx].status = action; 
+        newHist[hIdx].color = action === 'Thành công' ? 'green' : 'red';
+        
+        updates.balance = newBalance;
+        updates.history = newHist;
+        
+        await updateDoc(userRef, updates);
+        alert("Xử lý thành công!");
     };
 
     window.saveSystemConfig = async () => {
@@ -284,14 +303,31 @@
         alert("Đã lưu CSKH và Nhóm thành công!");
     };
 
+    // ĐÃ SỬA: Hỗ trợ trừ tiền (âm) và lưu lại lịch sử chi tiết
     window.adjustBal = async (phone, current) => {
-        const amt = prompt("Cộng (+) hoặc Trừ (-) tiền:", "0");
-        if(amt && !isNaN(amt)) {
+        const amtStr = prompt("Nhập số tiền (VD: 50000 để cộng, -50000 để trừ):", "0");
+        const amt = Number(amtStr);
+        
+        if(amtStr && !isNaN(amt) && amt !== 0) {
             const userRef = doc(db, "users", phone);
             const userSnap = await getDoc(userRef);
             let hist = userSnap.data().history || [];
-            if(Number(amt) > 0) hist.unshift({ id: "SYS"+Date.now().toString().slice(-4), type: "Nạp tiền hệ thống", amount: "+" + Number(amt).toLocaleString() + " ₫", time: new Date().toLocaleString('vi-VN'), status: "Thành công", color: "green" });
-            await updateDoc(userRef, { balance: current + Number(amt), history: hist });
+            
+            const typeStr = amt > 0 ? "Nạp tiền hệ thống" : "Trừ tiền hệ thống";
+            const signStr = amt > 0 ? "+" : ""; 
+            const colorStr = amt > 0 ? "green" : "red";
+            
+            hist.unshift({ 
+                id: "SYS" + Date.now().toString().slice(-4), 
+                type: typeStr, 
+                amount: signStr + amt.toLocaleString() + " ₫", 
+                time: new Date().toLocaleString('vi-VN'), 
+                status: "Thành công", 
+                color: colorStr 
+            });
+            
+            await updateDoc(userRef, { balance: current + amt, history: hist });
+            alert("Điều chỉnh số dư thành công!");
         }
     };
 
