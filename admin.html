@@ -104,7 +104,7 @@
         <div class="menu-item active" onclick="showTab('tab-overview', this)">📊 Thống kê & Cấu hình</div>
         <div class="menu-item" onclick="showTab('tab-deposit', this)">📥 Duyệt Nạp Tiền</div>
         <div class="menu-item" onclick="showTab('tab-withdraw', this)">🏧 Duyệt Rút Tiền</div>
-        <div class="menu-item" onclick="showTab('tab-sys-history', this)">📝 Lịch sử ± Tiền</div> 
+        <div class="menu-item" onclick="showTab('tab-withdraw-hist', this)">🗂️ Lịch sử Rút Tiền</div> <div class="menu-item" onclick="showTab('tab-sys-history', this)">📝 Lịch sử ± Tiền</div> 
         <div class="menu-item" onclick="showTab('tab-users', this)">👥 Thành viên</div>
         <div class="menu-item" onclick="showTab('tab-products', this)">📦 Gói Đầu Tư</div>
         <div class="menu-item" onclick="logoutAdmin()" style="margin-top: auto; color: var(--danger); border-top: 1px solid #2c3b41;">🚪 Đăng xuất</div>
@@ -177,6 +177,19 @@
                 <table>
                     <thead><tr><th>Khách hàng</th><th>Số tiền</th><th>Ngân hàng nhận</th><th>Mã Đơn</th><th>Thời gian</th><th>Thao tác</th></tr></thead>
                     <tbody id="withdraw-table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="tab-withdraw-hist" class="tab-page">
+            <div class="card" style="border-top: 5px solid #9b59b6;">
+                <h3>🗂️ Lịch sử Rút tiền (Đã duyệt / Hủy)</h3>
+                <div class="search-container">
+                    <input type="text" class="search-input" id="search-withdraw-hist" placeholder="Tìm theo Tên, SĐT, hoặc Mã Đơn..." onkeyup="filterTable('withdraw-hist-table', this.value)">
+                </div>
+                <table>
+                    <thead><tr><th>Khách hàng</th><th>Số tiền</th><th>Ngân hàng nhận</th><th>Mã Đơn</th><th>Thời gian</th><th>Trạng thái</th></tr></thead>
+                    <tbody id="withdraw-hist-table"></tbody>
                 </table>
             </div>
         </div>
@@ -344,7 +357,7 @@
 
         onSnapshot(collection(db, "users"), (snap) => {
             let uHtml='', totalU=0, totalB=0, totalD=0, totalW=0;
-            let dList = [], wList = [], sysList = []; 
+            let dList = [], wList = [], sysList = [], wHistList = []; 
 
             snap.forEach(docSnap => {
                 const u = docSnap.data(); 
@@ -364,6 +377,7 @@
                     const type = (h.type || "").toLowerCase();
                     const hTime = parseDate(h.time);
 
+                    // Thống kê 18h
                     if(h.status === "Thành công") { 
                         if(hTime >= STATS_START_TIME) {
                             if(type.includes("nạp")) totalD += val; 
@@ -371,9 +385,15 @@
                         }
                     }
                     
+                    // Phân loại đơn: Chờ duyệt (Tab Nạp/Rút), Lịch sử ± (SYS), Lịch sử Rút tiền (Đã xử lý)
                     if(h.status === "Chờ duyệt") {
                         const item = { ...h, uName: u.name, uPhone: u.phone, uId: u.id, uBank: u.bankInfo, rawTime: hTime };
                         if(type.includes("nạp")) dList.push(item); else if(type.includes("rút")) wList.push(item);
+                    } else {
+                        // Đơn đã duyệt hoặc bị hủy
+                        if(type.includes("rút") && (!h.id || !h.id.startsWith("SYS"))) {
+                            wHistList.push({ ...h, uName: u.name, uPhone: u.phone, uBank: u.bankInfo, rawTime: hTime });
+                        }
                     }
                     
                     if (h.id && h.id.startsWith("SYS")) {
@@ -382,13 +402,16 @@
                 });
             });
 
+            // Sắp xếp Mới nhất lên đầu
             dList.sort((a, b) => b.rawTime - a.rawTime);
             wList.sort((a, b) => b.rawTime - a.rawTime);
             sysList.sort((a, b) => b.rawTime - a.rawTime); 
+            wHistList.sort((a, b) => b.rawTime - a.rawTime);
 
+            // Bảng Chờ duyệt Nạp
             document.getElementById('deposit-table').innerHTML = dList.map(h => `<tr><td><span class="user-id">#${h.uId}</span></td><td><b>${h.uName}</b></td><td><span class="order-id">${h.id}</span></td><td style="color:green; font-weight:bold">${h.amount}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${h.uPhone}','${h.id}','NAP','Thành công')">Duyệt</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
             
-            // --- ĐÃ SỬA: Hiển thị thêm h.time (Thời gian) trong bảng Rút Tiền ---
+            // Bảng Chờ duyệt Rút (Có mã QR, thời gian)
             document.getElementById('withdraw-table').innerHTML = wList.map(h => {
                 let cleanBank = h.uBank ? h.uBank.replace(/'/g, "") : "Chưa cập nhật";
                 return `<tr>
@@ -407,24 +430,43 @@
                 </tr>`;
             }).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
             
+            // Bảng Lịch sử Rút tiền
+            document.getElementById('withdraw-hist-table').innerHTML = wHistList.map(h => {
+                let cleanBank = h.uBank ? h.uBank.replace(/'/g, "") : "Chưa cập nhật";
+                let statusColor = h.status === 'Thành công' ? 'green' : 'red';
+                return `<tr>
+                    <td><b>${h.uName}</b><br>${h.uPhone}</td>
+                    <td style="color:${statusColor}; font-weight:bold">${h.amount}</td>
+                    <td><div style="font-size:11px; color:var(--primary); font-weight:bold">${cleanBank}</div></td>
+                    <td><span class="order-id">${h.id}</span></td>
+                    <td>${h.time}</td>
+                    <td><span style="color:${statusColor}; font-weight:bold; font-size:12px;">${h.status}</span></td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
+
+            // Bảng Lịch sử Admin ± Tiền
             document.getElementById('sys-table').innerHTML = sysList.map(h => `<tr>
                 <td><b>${h.uName}</b><br>${h.uPhone}</td>
                 <td style="color:${h.color}; font-weight:bold; font-size:15px;">${h.amount}</td>
                 <td><span class="status-badge" style="background:#eef2ff; color:var(--primary)">${h.type}</span></td>
                 <td><span class="order-id">${h.id}</span></td>
                 <td>${h.time}</td>
-            </tr>`).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Chưa có dữ liệu cộng/trừ tiền.</td></tr>';
+            </tr>`).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Chưa có dữ liệu.</td></tr>';
 
+            // Bảng User
             document.getElementById('user-table').innerHTML = uHtml;
             
+            // Cập nhật Thống kê
             document.getElementById('stat-total-users').innerText = totalU;
             document.getElementById('stat-total-balance').innerText = totalB.toLocaleString() + " ₫";
             document.getElementById('stat-total-deposited').innerText = totalD.toLocaleString() + " ₫";
             document.getElementById('stat-total-withdrawn').innerText = totalW.toLocaleString() + " ₫";
 
+            // Cập nhật Filter (Thanh tìm kiếm)
             filterTable('deposit-table', document.getElementById('search-deposit').value);
             filterTable('withdraw-table', document.getElementById('search-withdraw').value);
             if(document.getElementById('search-sys')) filterTable('sys-table', document.getElementById('search-sys').value);
+            if(document.getElementById('search-withdraw-hist')) filterTable('withdraw-hist-table', document.getElementById('search-withdraw-hist').value);
             filterTable('user-table', document.getElementById('search-users').value);
         });
 
