@@ -132,13 +132,18 @@
                         return;
                     }
 
-                    // NẾU ĐÃ LIÊN KẾT -> CHỈ HIỆN THÔNG TIN LÊN CHO ĐẸP
-                    const parts = currentUser.bankInfo.split(" - ");
+                    // NẾU ĐÃ LIÊN KẾT -> HIỆN THÔNG TIN LÊN
+                    const bankData = currentUser.bankInfo;
+                    // Xử lý đọc dữ liệu theo format object (từ code liên kết bank mới cập nhật)
+                    let bankName = bankData.bank || "";
+                    let bankNum = bankData.number || "";
+                    let bankOwner = bankData.owner || "";
+
                     bankDisplay.innerHTML = `
                         <div class="bank-icon">🏦</div>
                         <div class="bank-details">
-                            <p>${parts[0]} - ${parts[1]}</p>
-                            <span>Tên chủ thẻ: ${parts[2]}</span>
+                            <p>${bankName} - ${bankNum}</p>
+                            <span>Tên chủ thẻ: ${bankOwner}</span>
                         </div>
                     `;
                 }
@@ -155,6 +160,13 @@
             const amountInput = document.getElementById('withdraw-amount').value;
             const passwordInput = document.getElementById('withdraw-password').value;
             const amount = Number(amountInput);
+
+            // ==========================================
+            // CHỐT CHẶN BẢO VỆ: KIỂM TRA MUA GÓI
+            // ==========================================
+            if (!currentUser.investments || currentUser.investments.length === 0) {
+                return alert("⚠️ YÊU CẦU KÍCH HOẠT: Bạn cần mua ít nhất 1 gói đầu tư để có thể kích hoạt chức năng rút tiền (Bao gồm cả tiền khuyến mãi)!");
+            }
 
             // ==========================================
             // CÁC ĐIỀU KIỆN RÚT TIỀN CHẶT CHẼ
@@ -185,7 +197,7 @@
                 const orderId = "OUT" + Date.now().toString().slice(-6);
                 const timeStr = new Date().toLocaleString('vi-VN');
 
-                // 1. Trừ tiền và ghi lịch sử lên Firebase
+                // Trừ tiền và ghi lệnh vào history với trạng thái "Chờ duyệt"
                 const historyRecord = {
                     id: orderId,
                     type: "Rút tiền về ngân hàng",
@@ -203,24 +215,11 @@
                     history: userHistory
                 });
 
-                // 2. Gửi lệnh cho Admin (Lưu LocalStorage để trang admin.html của bạn đọc được)
-                let adminWithdrawals = JSON.parse(localStorage.getItem('database_lenh_rut')) || [];
-                adminWithdrawals.push({
-                    orderId: orderId,
-                    phone: currentUser.phone,
-                    userName: currentUser.name,
-                    amount: amount,
-                    bankInfo: currentUser.bankInfo,
-                    time: timeStr,
-                    status: "Chờ duyệt"
-                });
-                localStorage.setItem('database_lenh_rut', JSON.stringify(adminWithdrawals));
-
-                // 3. Giữ màn hình chờ 1.5 giây cho giống thật rồi báo thành công
+                // Giữ màn hình chờ 1.5 giây cho giống thật rồi báo thành công
                 setTimeout(() => {
                     document.getElementById('loading-screen').style.display = 'none';
-                    alert("✅ Tạo lệnh rút tiền thành công! Hệ thống đang xử lý, vui lòng chờ.");
-                    window.location.href = "dashboard.html";
+                    alert("✅ Tạo lệnh rút tiền thành công! Lệnh rút đã được gửi đến hệ thống Admin để xét duyệt.");
+                    window.location.href = "lich-su-giao-dich.html";
                 }, 1500);
 
             } catch (err) {
