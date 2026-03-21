@@ -112,10 +112,10 @@
     <div class="main">
         <div id="tab-overview" class="tab-page active">
             <div class="stats-grid">
-                <div class="stat-card"><h4>Thành viên</h4><div id="stat-total-users">0</div></div>
-                <div class="stat-card" style="border-bottom-color: var(--success);"><h4>Vốn đã nạp</h4><div id="stat-total-deposited" style="color:var(--success)">0 ₫</div></div>
-                <div class="stat-card" style="border-bottom-color: var(--danger);"><h4>Vốn đã rút</h4><div id="stat-total-withdrawn" style="color:var(--danger)">0 ₫</div></div>
-                <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Số dư ví khách</h4><div id="stat-total-balance">0 ₫</div></div>
+                <div class="stat-card"><h4>Thành viên (Từ 18h)</h4><div id="stat-total-users">0</div></div>
+                <div class="stat-card" style="border-bottom-color: var(--success);"><h4>Vốn đã nạp (Từ 18h)</h4><div id="stat-total-deposited" style="color:var(--success)">0 ₫</div></div>
+                <div class="stat-card" style="border-bottom-color: var(--danger);"><h4>Vốn đã rút (Từ 18h)</h4><div id="stat-total-withdrawn" style="color:var(--danger)">0 ₫</div></div>
+                <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Tổng Số dư (Tất cả)</h4><div id="stat-total-balance">0 ₫</div></div>
             </div>
 
             <div class="card">
@@ -140,7 +140,7 @@
                         <textarea id="cfg-content" rows="2"></textarea>
                     </div>
                 </div>
-                <button class="btn btn-success" style="margin-top:20px; padding:12px 30px" onclick="saveSystemConfig()">LƯU TẤT CẤU HÌNH</button>
+                <button class="btn btn-success" style="margin-top:20px; padding:12px 30px" onclick="saveSystemConfig()">LƯU TẤT CẢ CẤU HÌNH</button>
             </div>
 
             <div class="card">
@@ -291,56 +291,83 @@
         }
     };
 
+    // ĐÃ SỬA: Hàm lọc thời gian linh hoạt và chính xác hơn
     function parseDate(dateStr) {
         try {
-            const [time, date] = dateStr.split(' ');
-            const [h, m, s] = time.split(':');
-            const [D, M, Y] = date.split('/');
+            if(!dateStr) return 0;
+            let clean = dateStr.replace(/,/g, '').trim();
+            let parts = clean.split(' ');
+            let timeStr = parts[0].includes(':') ? parts[0] : parts[1];
+            let dateStrPart = parts[0].includes('/') ? parts[0] : parts[1];
+
+            const [h, m, s] = timeStr.split(':');
+            const [D, M, Y] = dateStrPart.split('/');
             return new Date(Y, M - 1, D, h, m, s).getTime();
         } catch(e) { return 0; }
     }
 
-    // --- HÀM MỚI: TẠO MÃ QR CODE TỪ THÔNG TIN BANK CỦA KHÁCH ---
+    // --- TẠO MÃ QR CODE TỪ THÔNG TIN BANK CỦA KHÁCH ---
     window.showUserQR = (bankStr, amountStr) => {
-        // Lấy số tiền thực tế (chuyển chuỗi -500,000 ₫ thành 500000)
         let amount = Number(amountStr.replace(/[^0-9]/g, ''));
-        
-        // Trích xuất Số Tài Khoản (Là cụm số đầu tiên trong chuỗi thông tin bank)
-        let stkMatch = bankStr.match(/\d+/);
+        let stkMatch = bankStr.match(/\\d+/);
         let stk = stkMatch ? stkMatch[0] : "";
         
-        // Trích xuất Tên Ngân Hàng (Loại bỏ các từ thừa, lấy từ khóa đầu tiên trước số tài khoản)
-        // Ví dụ: "Ngân hàng MBBank - 123456" -> sẽ lấy ra "MBBank"
         let rawBank = bankStr.split(stk)[0].replace(/ngân hàng|ngan hang/gi, '').replace(/[-_.,:]/g, '').trim();
-        let finalBankCode = rawBank.split(" ")[0]; // Thường là chữ đầu tiên như MB, VCB, Techcombank
-        if (!finalBankCode) finalBankCode = "MB"; // Mặc định nếu không tìm thấy
+        let finalBankCode = rawBank.split(" ")[0]; 
+        if (!finalBankCode) finalBankCode = "MB"; 
 
-        // Tạo Link ảnh QR qua hệ thống VietQR
         let qrUrl = `https://img.vietqr.io/image/${finalBankCode}-${stk}-compact2.png?amount=${amount}&addInfo=Thanh toan rut tien`;
 
-        // Cập nhật lên Popup Modal
         document.getElementById('qr-bank-info').innerHTML = `Rút: <span style="color:#e74c3c; font-size:18px;">${amount.toLocaleString()} đ</span><br>Chi tiết: ${bankStr}`;
         document.getElementById('qr-image').src = qrUrl;
         document.getElementById('qr-modal').style.display = 'flex';
     };
 
-    // --- HÀM TẢI DỮ LIỆU TỪ FIREBASE ---
+    // --- HÀM TẢI DỮ LIỆU TỪ FIREBASE (CÓ LỌC 18H) ---
     async function startAdminSystem() {
+        
+        // ĐÃ THÊM: Tính toán mốc 18:00 của ca làm việc hiện tại
+        const now = new Date();
+        let shiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
+        // Nếu bây giờ chưa đến 18h thì ca làm việc tính từ 18h ngày hôm qua
+        if (now.getTime() < shiftStart.getTime()) {
+            shiftStart.setDate(shiftStart.getDate() - 1);
+        }
+        const STATS_START_TIME = shiftStart.getTime();
+
         onSnapshot(collection(db, "users"), (snap) => {
             let uHtml='', totalU=0, totalB=0, totalD=0, totalW=0;
             let dList = [], wList = [];
 
             snap.forEach(docSnap => {
-                const u = docSnap.data(); totalU++; totalB += (u.balance || 0);
+                const u = docSnap.data(); 
+                
+                // Lọc thống kê thành viên tạo từ sau 18h
+                let uTime = u.createdAt ? parseDate(u.createdAt) : 0;
+                if(uTime >= STATS_START_TIME) {
+                    totalU++; 
+                }
+                
+                // Tổng số dư ví luôn tính tất cả (Vì tiền cũ vẫn là nợ cần quản lý)
+                totalB += (u.balance || 0); 
+                
                 const sColor = u.status === 'Đã kích hoạt' ? '#2ecc71' : '#e74c3c';
                 uHtml += `<tr><td><span class="user-id">#${u.id}</span></td><td><b>${u.name}</b><br>${u.phone}</td><td><b>${(u.balance||0).toLocaleString()}₫</b></td><td><span class="status-badge" style="background:${sColor}22; color:${sColor}">${u.status}</span></td><td><button class="btn btn-primary" onclick="adjustBal('${u.phone}', ${u.balance})">± Tiền</button></td></tr>`;
 
                 if(u.history) u.history.forEach((h) => {
                     const val = Number(h.amount.replace(/[^0-9]/g, ''));
                     const type = (h.type || "").toLowerCase();
-                    if(h.status === "Thành công") { if(type.includes("nạp")) totalD += val; if(type.includes("rút")) totalW += val; }
+                    const hTime = h.time ? parseDate(h.time) : 0;
+
+                    if(h.status === "Thành công") { 
+                        // Lọc tổng nạp/rút chỉ từ sau 18h ca này
+                        if(hTime >= STATS_START_TIME) {
+                            if(type.includes("nạp")) totalD += val; 
+                            if(type.includes("rút")) totalW += val; 
+                        }
+                    }
                     if(h.status === "Chờ duyệt") {
-                        const item = { ...h, uName: u.name, uPhone: u.phone, uId: u.id, uBank: u.bankInfo, rawTime: parseDate(h.time) };
+                        const item = { ...h, uName: u.name, uPhone: u.phone, uId: u.id, uBank: u.bankInfo, rawTime: hTime };
                         if(type.includes("nạp")) dList.push(item); else if(type.includes("rút")) wList.push(item);
                     }
                 });
@@ -351,7 +378,6 @@
 
             document.getElementById('deposit-table').innerHTML = dList.map(h => `<tr><td><span class="user-id">#${h.uId}</span></td><td><b>${h.uName}</b></td><td><span class="order-id">${h.id}</span></td><td style="color:green; font-weight:bold">${h.amount}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${h.uPhone}','${h.id}','NAP','Thành công')">Duyệt</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
             
-            // CẬP NHẬT GIAO DIỆN BẢNG RÚT TIỀN (Thêm nút Xem QR Code)
             document.getElementById('withdraw-table').innerHTML = wList.map(h => {
                 let cleanBank = h.uBank ? h.uBank.replace(/'/g, "") : "Chưa cập nhật";
                 return `<tr>
@@ -371,6 +397,7 @@
             
             document.getElementById('user-table').innerHTML = uHtml;
             
+            // Cập nhật giá trị hiển thị Thống kê
             document.getElementById('stat-total-users').innerText = totalU;
             document.getElementById('stat-total-balance').innerText = totalB.toLocaleString() + " ₫";
             document.getElementById('stat-total-deposited').innerText = totalD.toLocaleString() + " ₫";
