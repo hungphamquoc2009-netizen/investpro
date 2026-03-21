@@ -63,6 +63,14 @@
         .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; }
         
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; transition: 0.3s; font-family: inherit; }
+
+        /* Modal QR Code */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 9999; display: none; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        .modal-content { background: white; width: 100%; max-width: 350px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from { transform: translateY(-20px); } to { transform: translateY(0); } }
+        .modal-header { background: var(--info); color: white; padding: 15px 20px; font-size: 16px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { cursor: pointer; font-size: 20px; opacity: 0.8; }
+        .modal-body { padding: 20px; text-align: center; }
     </style>
 </head>
 <body>
@@ -76,13 +84,28 @@
     </div>
 </div>
 
+<div id="qr-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>📱 Quét Mã Trả Khách</span>
+            <span class="modal-close" onclick="document.getElementById('qr-modal').style.display='none'">✕</span>
+        </div>
+        <div class="modal-body">
+            <p id="qr-bank-info" style="font-size: 13px; color: #444; font-weight: bold; margin-bottom: 15px; line-height: 1.5;"></p>
+            <img id="qr-image" src="" alt="Mã QR VietQR" style="width: 100%; border-radius: 10px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <p style="font-size: 11px; color: #888; margin-top: 15px; font-style: italic;">* Lưu ý: Vui lòng kiểm tra kỹ Tên Chủ Tài Khoản trên App Ngân hàng trước khi bấm Chuyển tiền.</p>
+        </div>
+    </div>
+</div>
+
 <div id="admin-layout">
     <div class="sidebar">
         <div class="sidebar-header">INVEST PRO ADMIN</div>
         <div class="menu-item active" onclick="showTab('tab-overview', this)">📊 Thống kê & Cấu hình</div>
         <div class="menu-item" onclick="showTab('tab-deposit', this)">📥 Duyệt Nạp Tiền</div>
         <div class="menu-item" onclick="showTab('tab-withdraw', this)">🏧 Duyệt Rút Tiền</div>
-        <div class="menu-item" onclick="showTab('tab-sys-history', this)">📝 Lịch sử ± Tiền</div> <div class="menu-item" onclick="showTab('tab-users', this)">👥 Thành viên</div>
+        <div class="menu-item" onclick="showTab('tab-sys-history', this)">📝 Lịch sử ± Tiền</div> 
+        <div class="menu-item" onclick="showTab('tab-users', this)">👥 Thành viên</div>
         <div class="menu-item" onclick="showTab('tab-products', this)">📦 Gói Đầu Tư</div>
         <div class="menu-item" onclick="logoutAdmin()" style="margin-top: auto; color: var(--danger); border-top: 1px solid #2c3b41;">🚪 Đăng xuất</div>
     </div>
@@ -90,10 +113,10 @@
     <div class="main">
         <div id="tab-overview" class="tab-page active">
             <div class="stats-grid">
-                <div class="stat-card"><h4>Thành viên</h4><div id="stat-total-users">0</div></div>
-                <div class="stat-card" style="border-bottom-color: var(--success);"><h4>Vốn đã nạp</h4><div id="stat-total-deposited" style="color:var(--success)">0 ₫</div></div>
-                <div class="stat-card" style="border-bottom-color: var(--danger);"><h4>Vốn đã rút</h4><div id="stat-total-withdrawn" style="color:var(--danger)">0 ₫</div></div>
-                <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Số dư ví khách</h4><div id="stat-total-balance">0 ₫</div></div>
+                <div class="stat-card"><h4>Thành viên (Từ 18h)</h4><div id="stat-total-users">0</div></div>
+                <div class="stat-card" style="border-bottom-color: var(--success);"><h4>Vốn đã nạp (Từ 18h)</h4><div id="stat-total-deposited" style="color:var(--success)">0 ₫</div></div>
+                <div class="stat-card" style="border-bottom-color: var(--danger);"><h4>Vốn đã rút (Từ 18h)</h4><div id="stat-total-withdrawn" style="color:var(--danger)">0 ₫</div></div>
+                <div class="stat-card" style="border-bottom-color: #3498db;"><h4>Tổng Số dư (Tất cả)</h4><div id="stat-total-balance">0 ₫</div></div>
             </div>
 
             <div class="card">
@@ -280,7 +303,6 @@
         }
     };
 
-    // Hàm chuyển đổi ngày giờ an toàn hơn
     function parseDate(dateStr) {
         try {
             if(!dateStr) return 0;
@@ -295,13 +317,45 @@
         } catch(e) { return 0; }
     }
 
+    // --- TẠO MÃ QR CODE TỪ THÔNG TIN BANK CỦA KHÁCH ---
+    window.showUserQR = (bankStr, amountStr) => {
+        let amount = Number(amountStr.replace(/[^0-9]/g, ''));
+        let stkMatch = bankStr.match(/\d+/);
+        let stk = stkMatch ? stkMatch[0] : "";
+        
+        let rawBank = bankStr.split(stk)[0].replace(/ngân hàng|ngan hang/gi, '').replace(/[-_.,:]/g, '').trim();
+        let finalBankCode = rawBank.split(" ")[0]; 
+        if (!finalBankCode) finalBankCode = "MB"; 
+
+        let qrUrl = `https://img.vietqr.io/image/${finalBankCode}-${stk}-compact2.png?amount=${amount}&addInfo=Thanh toan rut tien`;
+
+        document.getElementById('qr-bank-info').innerHTML = `Rút: <span style="color:#e74c3c; font-size:18px;">${amount.toLocaleString()} đ</span><br>Chi tiết: ${bankStr}`;
+        document.getElementById('qr-image').src = qrUrl;
+        document.getElementById('qr-modal').style.display = 'flex';
+    };
+
     async function startAdminSystem() {
+        const now = new Date();
+        let shiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
+        if (now.getTime() < shiftStart.getTime()) {
+            shiftStart.setDate(shiftStart.getDate() - 1);
+        }
+        const STATS_START_TIME = shiftStart.getTime();
+
         onSnapshot(collection(db, "users"), (snap) => {
             let uHtml='', totalU=0, totalB=0, totalD=0, totalW=0;
-            let dList = [], wList = [], sysList = []; // Khởi tạo mảng lưu lịch sử Admin
+            let dList = [], wList = [], sysList = []; 
 
             snap.forEach(docSnap => {
-                const u = docSnap.data(); totalU++; totalB += (u.balance || 0);
+                const u = docSnap.data(); 
+                
+                let uTime = u.createdAt ? parseDate(u.createdAt) : 0;
+                if(uTime >= STATS_START_TIME) {
+                    totalU++; 
+                }
+                
+                totalB += (u.balance || 0); 
+                
                 const sColor = u.status === 'Đã kích hoạt' ? '#2ecc71' : '#e74c3c';
                 uHtml += `<tr><td><span class="user-id">#${u.id}</span></td><td><b>${u.name}</b><br>${u.phone}</td><td><b>${(u.balance||0).toLocaleString()}₫</b></td><td><span class="status-badge" style="background:${sColor}22; color:${sColor}">${u.status}</span></td><td><button class="btn btn-primary" onclick="adjustBal('${u.phone}', ${u.balance})">± Tiền</button></td></tr>`;
 
@@ -310,14 +364,18 @@
                     const type = (h.type || "").toLowerCase();
                     const hTime = parseDate(h.time);
 
-                    if(h.status === "Thành công") { if(type.includes("nạp")) totalD += val; if(type.includes("rút")) totalW += val; }
+                    if(h.status === "Thành công") { 
+                        if(hTime >= STATS_START_TIME) {
+                            if(type.includes("nạp")) totalD += val; 
+                            if(type.includes("rút")) totalW += val; 
+                        }
+                    }
                     
                     if(h.status === "Chờ duyệt") {
                         const item = { ...h, uName: u.name, uPhone: u.phone, uId: u.id, uBank: u.bankInfo, rawTime: hTime };
                         if(type.includes("nạp")) dList.push(item); else if(type.includes("rút")) wList.push(item);
                     }
                     
-                    // --- BẮT CÁC GIAO DỊCH DO ADMIN CAN THIỆP ---
                     if (h.id && h.id.startsWith("SYS")) {
                         sysList.push({ ...h, uName: u.name, uPhone: u.phone, rawTime: hTime });
                     }
@@ -326,12 +384,28 @@
 
             dList.sort((a, b) => b.rawTime - a.rawTime);
             wList.sort((a, b) => b.rawTime - a.rawTime);
-            sysList.sort((a, b) => b.rawTime - a.rawTime); // Sắp xếp lịch sử Admin
+            sysList.sort((a, b) => b.rawTime - a.rawTime); 
 
             document.getElementById('deposit-table').innerHTML = dList.map(h => `<tr><td><span class="user-id">#${h.uId}</span></td><td><b>${h.uName}</b></td><td><span class="order-id">${h.id}</span></td><td style="color:green; font-weight:bold">${h.amount}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${h.uPhone}','${h.id}','NAP','Thành công')">Duyệt</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
-            document.getElementById('withdraw-table').innerHTML = wList.map(h => `<tr><td><b>${h.uName}</b><br>${h.uPhone}</td><td style="color:red; font-weight:bold">${h.amount}</td><td><div style="font-size:11px; color:var(--primary); font-weight:bold">${h.uBank}</div></td><td><span class="order-id">${h.id}</span></td><td><button class="btn btn-success" onclick="processOrder('${h.uPhone}','${h.id}','RUT','Thành công')">Duyệt</button> <button class="btn btn-danger" onclick="processOrder('${h.uPhone}','${h.id}','RUT','Bị hủy')">Hủy</button></td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
             
-            // --- ĐỔ DỮ LIỆU RA BẢNG LỊCH SỬ ± TIỀN ---
+            // --- ĐÃ PHỤC HỒI NÚT "HIỆN MÃ QR" Ở BẢNG RÚT TIỀN ---
+            document.getElementById('withdraw-table').innerHTML = wList.map(h => {
+                let cleanBank = h.uBank ? h.uBank.replace(/'/g, "") : "Chưa cập nhật";
+                return `<tr>
+                    <td><b>${h.uName}</b><br>${h.uPhone}</td>
+                    <td style="color:red; font-weight:bold">${h.amount}</td>
+                    <td>
+                        <div style="font-size:11px; color:var(--primary); font-weight:bold; margin-bottom:6px;">${cleanBank}</div>
+                        <button class="btn" style="background:#8e44ad; color:white; padding:4px 8px; font-size:10px; width:100%; border-radius:5px;" onclick="showUserQR('${cleanBank}', '${h.amount}')">📱 HIỆN MÃ QR</button>
+                    </td>
+                    <td><span class="order-id">${h.id}</span></td>
+                    <td>
+                        <button class="btn btn-success" style="margin-bottom:5px; width:100%;" onclick="processOrder('${h.uPhone}','${h.id}','RUT','Thành công')">Duyệt</button><br>
+                        <button class="btn btn-danger" style="width:100%;" onclick="processOrder('${h.uPhone}','${h.id}','RUT','Bị hủy')">Hủy</button>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
+            
             document.getElementById('sys-table').innerHTML = sysList.map(h => `<tr>
                 <td><b>${h.uName}</b><br>${h.uPhone}</td>
                 <td style="color:${h.color}; font-weight:bold; font-size:15px;">${h.amount}</td>
