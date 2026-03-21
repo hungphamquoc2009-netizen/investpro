@@ -158,7 +158,7 @@
         <div style="background:var(--orange); color:white; padding:20px; border-radius:20px; text-align:center; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3); margin-bottom: 20px;">
             <p style="margin: 0 0 10px 0; font-size: 13px; opacity: 0.9;">Mã giới thiệu của bạn</p>
             <h1 id="m-code" style="margin:0; font-size: 32px; letter-spacing: 2px;">0000</h1>
-            <button onclick="copyCode()" style="background: white; color: var(--orange); border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; margin-top: 15px;">Sao chép mã</button>
+            <button onclick="copyCode()" style="background: white; color: var(--orange); border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; margin-top: 15px;">Sao chép link mời</button>
         </div>
 
         <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;">
@@ -236,7 +236,18 @@
         // TIỆN ÍCH CHUNG
         window.closeNotice = () => document.getElementById('notice-modal').style.display = 'none';
         window.logout = () => { localStorage.removeItem('thongTinTaiKhoan'); window.location.href = 'dang-nhap.html'; };
-        window.copyCode = () => { navigator.clipboard.writeText(document.getElementById('m-code').innerText); alert("Đã sao chép mã mời!"); };
+        
+        // --- ĐÃ SỬA: HÀM SAO CHÉP TẠO LINK MỜI TỰ ĐỘNG ---
+        window.copyCode = () => { 
+            const code = document.getElementById('m-code').innerText;
+            const inviteLink = window.location.origin + "/dang-ky.html?ref=" + code; 
+            
+            navigator.clipboard.writeText(inviteLink).then(() => {
+                alert("Đã sao chép link mời: \n" + inviteLink);
+            }).catch(err => {
+                console.error("Lỗi copy: ", err);
+            });
+        };
 
         window.changePage = (id, el) => {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -253,7 +264,7 @@
         };
 
         // HÀM MỞ CSKH (Đọc link từ localStorage do Admin cài)
-window.openCSKH = async () => {
+        window.openCSKH = async () => {
             try {
                 const snap = await getDoc(doc(db, "config", "notice"));
                 if (snap.exists() && snap.data().cskh) {
@@ -435,8 +446,6 @@ window.openCSKH = async () => {
             profitInterval = setInterval(renderLive, 1000);
         };
 
-        // Hàm Tải Dữ Liệu Đội Nhóm được tách ra riêng (Giải quyết lỗi Vượt Quota của Firebase)
-// Hàm Tải Dữ Liệu Đội Nhóm bằng chiến thuật "Quét bủa vây"
         window.loadTeamData = async () => {
             if (!currentUser) return;
             try {
