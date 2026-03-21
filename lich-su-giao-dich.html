@@ -49,7 +49,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // Đã đổi lệnh import: Lấy trực tiếp getDoc và doc để trỏ vào user
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
@@ -78,52 +79,49 @@
 
         async function loadHistory() {
             const container = document.getElementById('history-list');
-            let transactions = [];
 
             try {
-                // 1. Lấy nạp tiền (Collection: deposits)
-                const qDep = query(collection(db, "deposits"), where("phone", "==", session.phone));
-                const snapDep = await getDocs(qDep);
-                snapDep.forEach(doc => {
-                    transactions.push({ ...doc.data(), displayType: "Nạp tiền", color: "#2ecc71", sign: "+" });
-                });
+                // Gọi thẳng vào tài khoản của user để lấy dữ liệu đồng nhất với Dashboard và Admin
+                const userRef = doc(db, "users", session.phone);
+                const snap = await getDoc(userRef);
 
-                // 2. Lấy rút tiền (Collection: withdraws)
-                const qWit = query(collection(db, "withdraws"), where("phone", "==", session.phone));
-                const snapWit = await getDocs(qWit);
-                snapWit.forEach(doc => {
-                    transactions.push({ ...doc.data(), displayType: "Rút tiền", color: "#e74c3c", sign: "-" });
-                });
+                if (snap.exists()) {
+                    const userData = snap.data();
+                    const history = userData.history || [];
 
-                // Sắp xếp thời gian mới nhất lên đầu
-                transactions.sort((a, b) => new Date(b.time) - new Date(a.time));
+                    if (history.length === 0) {
+                        container.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">Bạn chưa có giao dịch nào.</div>';
+                        return;
+                    }
 
-                if(transactions.length === 0) {
-                    container.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">Bạn chưa có giao dịch nào trên mây.</div>';
-                    return;
+                    // Render danh sách (Mảng history đã được lưu theo thứ tự mới nhất ở trên cùng từ trước)
+                    container.innerHTML = history.map(t => {
+                        let sttClass = "status-waiting";
+                        if(t.status === "Thành công") sttClass = "status-success";
+                        if(t.status === "Bị hủy") sttClass = "status-cancel";
+
+                        // Set màu dự phòng nếu thiếu
+                        let color = t.color || "#333";
+
+                        return `
+                            <div class="history-card" style="border-left-color: ${color}">
+                                <div class="h-left">
+                                    <div class="h-type">${t.type}</div>
+                                    <div class="h-time">${t.time}</div>
+                                </div>
+                                <div class="h-right">
+                                    <div class="h-amount" style="color: ${color}">${t.amount}</div>
+                                    <div class="h-status ${sttClass}">${t.status}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<div style="text-align:center; padding:50px; color:#999;">Tài khoản không tồn tại.</div>';
                 }
 
-                container.innerHTML = transactions.map(t => {
-                    let sttClass = "status-waiting";
-                    if(t.status === "Thành công") sttClass = "status-success";
-                    if(t.status === "Bị hủy") sttClass = "status-cancel";
-
-                    return `
-                        <div class="history-card" style="border-left-color: ${t.color}">
-                            <div class="h-left">
-                                <div class="h-type">${t.displayType}</div>
-                                <div class="h-time">${t.time}</div>
-                            </div>
-                            <div class="h-right">
-                                <div class="h-amount" style="color: ${t.color}">${t.sign}${Number(t.amount).toLocaleString()} ₫</div>
-                                <div class="h-status ${sttClass}">${t.status}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
             } catch (err) {
-                container.innerHTML = '<div style="text-align:center; color:red;">Lỗi kết nối Firebase. Hãy kiểm tra Rules!</div>';
+                container.innerHTML = '<div style="text-align:center; color:red;">Lỗi kết nối Firebase. Hãy kiểm tra lại kết nối mạng!</div>';
                 console.error("Firebase Error:", err);
             }
         }
