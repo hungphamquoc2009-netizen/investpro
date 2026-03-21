@@ -153,27 +153,66 @@
 
     <div id="tab-products" class="tab-page">
         <div class="card">
-            <h3 id="p-form-title">📦 Quản lý Gói Đầu Tư</h3>
+            <h3 id="p-form-title" style="display: flex; justify-content: space-between; width: 100%;">
+                <span>📦 Quản lý Gói Đầu Tư</span>
+                <span style="font-size: 12px; font-weight: normal; color: #888;">Bổ sung hoặc cập nhật gói mới</span>
+            </h3>
             <input type="hidden" id="p-id-edit">
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                <div><label style="font-size:11px; font-weight:bold">Tên gói</label><input type="text" id="p-name"></div>
-                <div><label style="font-size:11px; font-weight:bold">Giá (VNĐ)</label><input type="number" id="p-price"></div>
-                <div><label style="font-size:11px; font-weight:bold">Lãi % / ngày</label><input type="number" id="p-profit"></div>
-                <div><label style="font-size:11px; font-weight:bold">Ngày hạn</label><input type="number" id="p-days"></div>
+            
+            <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; align-items: end;">
+                <div><label style="font-size:11px; font-weight:bold; color:#555">Tên gói</label><input type="text" id="p-name" placeholder="VD: Gói Khởi Nghiệp" oninput="previewROI()"></div>
+                <div><label style="font-size:11px; font-weight:bold; color:#555">Giá (VNĐ)</label><input type="number" id="p-price" placeholder="VD: 500000" oninput="previewROI()"></div>
+                <div><label style="font-size:11px; font-weight:bold; color:#555">Lãi % / ngày</label><input type="number" step="0.1" id="p-profit" placeholder="VD: 1.5" oninput="previewROI()"></div>
+                <div><label style="font-size:11px; font-weight:bold; color:#555">Số ngày chạy</label><input type="number" id="p-days" placeholder="VD: 90" oninput="previewROI()"></div>
+                <div>
+                    <label style="font-size:11px; font-weight:bold; color:#555">Huy hiệu tag</label>
+                    <select id="p-badge" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; font-size: 13px; font-weight: bold; color: #333;">
+                        <option value="Phổ biến">Phổ biến (Vàng)</option>
+                        <option value="Cân bằng">Cân bằng (Xanh dương)</option>
+                        <option value="Lợi nhuận cao">Lợi nhuận cao (Xanh lá)</option>
+                    </select>
+                </div>
             </div>
+
+            <div style="margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 10px; border: 1px dashed #cbd5e1; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 13px; color: #475569;">
+                    Lãi trả mỗi ngày: <strong id="preview-daily-profit" style="color: var(--success); font-size: 16px;">0 ₫</strong>
+                </div>
+                <div style="font-size: 13px; color: #475569;">
+                    Tổng lợi nhuận chu kỳ: <strong id="preview-total-profit" style="color: var(--danger); font-size: 16px;">0 ₫</strong> (<span id="preview-roi">0%</span>)
+                </div>
+            </div>
+
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button id="btn-save-product" class="btn btn-success" style="padding: 12px 40px" onclick="saveProduct()">LƯU SẢN PHẨM</button>
-                <button id="btn-cancel-product" class="btn btn-warning" style="display:none; padding: 12px 40px" onclick="cancelEditProduct()">HỦY SỬA</button>
+                <button id="btn-save-product" class="btn btn-primary" style="padding: 12px 40px; font-size: 13px; box-shadow: 0 4px 10px rgba(18, 26, 143, 0.2);" onclick="saveProduct()">➕ LƯU GÓI ĐẦU TƯ</button>
+                <button id="btn-cancel-product" class="btn btn-warning" style="display:none; padding: 12px 40px; font-size: 13px;" onclick="cancelEditProduct()">✖ HỦY SỬA</button>
             </div>
         </div>
-        <div class="card">
-            <table><thead><tr><th>Tên gói</th><th>Giá gói</th><th>Lãi/Ngày</th><th>Thời hạn</th><th>Thao tác</th></tr></thead><tbody id="product-list"></tbody></table>
+        
+        <div class="card" style="border-top: 4px solid var(--primary);">
+            <table>
+                <thead><tr><th>Tên gói</th><th>Huy hiệu</th><th>Giá gói</th><th>Lãi/Ngày</th><th>Thời hạn</th><th>Thao tác</th></tr></thead>
+                <tbody id="product-list"></tbody>
+            </table>
         </div>
     </div>
 
 </div>
 
 <script type="module">
+    // --- LỚP KHÓA BẢO MẬT ADMIN ---
+    const ADMIN_PASS = "AdminPro@999"; // Bạn có thể thay đổi mật khẩu này
+    if (sessionStorage.getItem("adminLog") !== "true") {
+        let pass = prompt("⛔ KHU VỰC BẢO MẬT!\nVui lòng nhập Mật khẩu Quản trị viên để truy cập:");
+        if (pass === ADMIN_PASS) {
+            sessionStorage.setItem("adminLog", "true");
+        } else {
+            alert("❌ Sai mật khẩu! Bạn không có quyền truy cập trang này.");
+            window.location.href = "dang-nhap.html"; 
+        }
+    }
+    // --- KẾT THÚC BẢO MẬT ---
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, onSnapshot, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
@@ -189,7 +228,6 @@
         el.classList.add('active');
     };
 
-    // HÀM LỌC TÌM KIẾM
     window.filterTable = (tableId, query) => {
         const rows = document.getElementById(tableId).getElementsByTagName('tr');
         const q = query.toLowerCase();
@@ -198,7 +236,6 @@
         }
     };
 
-    // CHUYỂN THỜI GIAN ĐỂ SẮP XẾP
     function parseDate(dateStr) {
         try {
             const [time, date] = dateStr.split(' ');
@@ -209,6 +246,7 @@
     }
 
     function initRealtime() {
+        // Lắng nghe Users
         onSnapshot(collection(db, "users"), (snap) => {
             let uHtml='', totalU=0, totalB=0, totalD=0, totalW=0;
             let dList = [], wList = [];
@@ -229,7 +267,6 @@
                 });
             });
 
-            // SẮP XẾP MỚI NHẤT LÊN ĐẦU
             dList.sort((a, b) => b.rawTime - a.rawTime);
             wList.sort((a, b) => b.rawTime - a.rawTime);
 
@@ -242,23 +279,38 @@
             document.getElementById('stat-total-deposited').innerText = totalD.toLocaleString() + " ₫";
             document.getElementById('stat-total-withdrawn').innerText = totalW.toLocaleString() + " ₫";
 
-            // GIỮ NGUYÊN BỘ LỌC KHI ĐANG TÌM KIẾM
             filterTable('deposit-table', document.getElementById('search-deposit').value);
             filterTable('withdraw-table', document.getElementById('search-withdraw').value);
             filterTable('user-table', document.getElementById('search-users').value);
         });
 
+        // Lắng nghe Products
         onSnapshot(collection(db, "products"), (snap) => {
             let html = ''; currentProducts = [];
-            snap.forEach(d => {
-                const p = d.data(); currentProducts.push(p);
-                html += `<tr><td><b>${p.name}</b></td><td>${Number(p.price).toLocaleString()}₫</td><td>${p.profit}%</td><td>${p.days} ngày</td><td><button class="btn btn-primary" onclick="loadEditProduct('${p.id}')">Sửa</button> <button class="btn btn-danger" style="margin-left:5px" onclick="deleteProduct('${p.id}')">Xóa</button></td></tr>`;
+            snap.forEach(d => currentProducts.push(d.data()));
+            
+            // Sắp xếp tự động giá từ thấp đến cao
+            currentProducts.sort((a, b) => a.price - b.price);
+            
+            currentProducts.forEach(p => {
+                let badgeColor = p.badge === 'Cân bằng' ? '#3498db' : (p.badge === 'Lợi nhuận cao' ? '#2ecc71' : '#f39c12');
+                html += `<tr>
+                    <td><b style="color: #1a202c;">${p.name}</b></td>
+                    <td><span style="background:${badgeColor}22; color:${badgeColor}; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800;">${p.badge || 'Phổ biến'}</span></td>
+                    <td style="color:var(--primary); font-weight:900;">${Number(p.price).toLocaleString()}₫</td>
+                    <td style="font-weight: 600;">${p.profit}%</td>
+                    <td>${p.days} ngày</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="loadEditProduct('${p.id}')">Sửa</button> 
+                        <button class="btn btn-danger" style="margin-left:5px" onclick="deleteProduct('${p.id}')">Xóa</button>
+                    </td>
+                </tr>`;
             });
             document.getElementById('product-list').innerHTML = html;
         });
     }
 
-    // ĐÃ SỬA: Gộp update để an toàn dữ liệu và tối ưu số lần ghi Firebase
+    // XỬ LÝ LỆNH NẠP / RÚT
     window.processOrder = async (phone, orderId, type, action) => {
         if(!confirm("Xác nhận " + action + " đơn này?")) return;
         
@@ -281,7 +333,7 @@
             updates.status = "Đã kích hoạt"; 
         }
         if(type === 'RUT' && action === 'Bị hủy') { 
-            newBalance += val; // Hoàn tiền lại ví nếu từ chối lệnh rút
+            newBalance += val; 
         }
         
         newHist[hIdx].status = action; 
@@ -303,7 +355,7 @@
         alert("Đã lưu CSKH và Nhóm thành công!");
     };
 
-    // ĐÃ SỬA: Hỗ trợ trừ tiền (âm) và lưu lại lịch sử chi tiết
+    // CỘNG TRỪ TIỀN
     window.adjustBal = async (phone, current) => {
         const amtStr = prompt("Nhập số tiền (VD: 50000 để cộng, -50000 để trừ):", "0");
         const amt = Number(amtStr);
@@ -336,11 +388,45 @@
         alert("Đã lưu bank!");
     };
 
+    // --- CÁC HÀM QUẢN LÝ GÓI ĐẦU TƯ ---
+    window.previewROI = () => {
+        let price = Number(document.getElementById('p-price').value) || 0;
+        let profit = Number(document.getElementById('p-profit').value) || 0;
+        let days = Number(document.getElementById('p-days').value) || 0;
+
+        let daily = (price * profit) / 100;
+        let total = daily * days;
+        let roi = profit * days;
+
+        document.getElementById('preview-daily-profit').innerText = daily.toLocaleString() + " ₫";
+        document.getElementById('preview-total-profit').innerText = total.toLocaleString() + " ₫";
+        document.getElementById('preview-roi').innerText = roi.toFixed(1) + "%";
+    };
+
     window.saveProduct = async () => {
-        const idEdit = document.getElementById('p-id-edit').value;
-        const id = idEdit || "PRO" + Date.now();
-        await setDoc(doc(db, "products", id), { id, name: document.getElementById('p-name').value, price: Number(document.getElementById('p-price').value), profit: document.getElementById('p-profit').value, days: document.getElementById('p-days').value, badge: "Phổ biến" });
-        cancelEditProduct();
+        const name = document.getElementById('p-name').value.trim();
+        const price = Number(document.getElementById('p-price').value);
+        const profit = Number(document.getElementById('p-profit').value);
+        const days = Number(document.getElementById('p-days').value);
+        const badge = document.getElementById('p-badge').value;
+
+        if(!name || price <= 0 || profit <= 0 || days <= 0) {
+            return alert("⚠️ Vui lòng điền đầy đủ và đúng định dạng số!");
+        }
+
+        const btn = document.getElementById('btn-save-product');
+        btn.innerText = "ĐANG XỬ LÝ..."; btn.disabled = true;
+
+        try {
+            const idEdit = document.getElementById('p-id-edit').value;
+            const id = idEdit || "PRO" + Date.now();
+            await setDoc(doc(db, "products", id), { id, name, price, profit, days, badge });
+            cancelEditProduct();
+        } catch(e) { 
+            alert("Lỗi: " + e.message); 
+        } finally {
+            btn.innerText = "➕ LƯU GÓI ĐẦU TƯ"; btn.disabled = false;
+        }
     };
 
     window.loadEditProduct = (id) => {
@@ -351,20 +437,38 @@
             document.getElementById('p-price').value = p.price;
             document.getElementById('p-profit').value = p.profit;
             document.getElementById('p-days').value = p.days;
-            document.getElementById('p-form-title').innerText = "⚙️ Sửa Gói: " + p.name;
-            document.getElementById('btn-save-product').innerText = "CẬP NHẬT";
+            if(p.badge) document.getElementById('p-badge').value = p.badge;
+            
+            document.getElementById('p-form-title').innerHTML = "⚙️ Sửa Gói: <span style='color:var(--warning)'>" + p.name + "</span>";
+            document.getElementById('btn-save-product').innerHTML = "💾 CẬP NHẬT GÓI";
+            document.getElementById('btn-save-product').style.background = "var(--success)";
             document.getElementById('btn-cancel-product').style.display = "inline-block";
+            
+            previewROI();
         }
     };
 
     window.cancelEditProduct = () => {
-        document.getElementById('p-id-edit').value = ''; document.getElementById('p-name').value = ''; document.getElementById('p-price').value = ''; document.getElementById('p-profit').value = ''; document.getElementById('p-days').value = '';
-        document.getElementById('p-form-title').innerText = "📦 Quản lý Gói Đầu Tư";
-        document.getElementById('btn-save-product').innerText = "LƯU SẢN PHẨM";
+        document.getElementById('p-id-edit').value = ''; 
+        document.getElementById('p-name').value = ''; 
+        document.getElementById('p-price').value = ''; 
+        document.getElementById('p-profit').value = ''; 
+        document.getElementById('p-days').value = '';
+        document.getElementById('p-badge').value = 'Phổ biến';
+        
+        document.getElementById('p-form-title').innerHTML = "📦 Quản lý Gói Đầu Tư";
+        document.getElementById('btn-save-product').innerHTML = "➕ LƯU GÓI ĐẦU TƯ";
+        document.getElementById('btn-save-product').style.background = "var(--primary)";
         document.getElementById('btn-cancel-product').style.display = "none";
+        
+        previewROI();
     };
 
-    window.deleteProduct = async (id) => { if(confirm("Xóa?")) await deleteDoc(doc(db, "products", id)); };
+    window.deleteProduct = async (id) => { 
+        if(confirm("Xóa gói này sẽ không ảnh hưởng đến những người đã mua. Xác nhận xóa?")) {
+            await deleteDoc(doc(db, "products", id)); 
+        }
+    };
 
     window.onload = async () => {
         initRealtime();
