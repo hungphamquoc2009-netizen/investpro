@@ -175,7 +175,7 @@
                     <input type="text" class="search-input" id="search-withdraw" placeholder="Tìm theo Tên, SĐT, ID hoặc Mã Đơn..." onkeyup="filterTable('withdraw-table', this.value)">
                 </div>
                 <table>
-                    <thead><tr><th>Khách hàng</th><th>Số tiền</th><th>Ngân hàng nhận</th><th>Mã Đơn</th><th>Thao tác</th></tr></thead>
+                    <thead><tr><th>Khách hàng</th><th>Số tiền</th><th>Ngân hàng nhận</th><th>Mã Đơn</th><th>Thời gian</th><th>Thao tác</th></tr></thead>
                     <tbody id="withdraw-table"></tbody>
                 </table>
             </div>
@@ -388,7 +388,7 @@
 
             document.getElementById('deposit-table').innerHTML = dList.map(h => `<tr><td><span class="user-id">#${h.uId}</span></td><td><b>${h.uName}</b></td><td><span class="order-id">${h.id}</span></td><td style="color:green; font-weight:bold">${h.amount}</td><td>${h.time}</td><td><button class="btn btn-success" onclick="processOrder('${h.uPhone}','${h.id}','NAP','Thành công')">Duyệt</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
             
-            // --- ĐÃ PHỤC HỒI NÚT "HIỆN MÃ QR" Ở BẢNG RÚT TIỀN ---
+            // --- ĐÃ SỬA: Hiển thị thêm h.time (Thời gian) trong bảng Rút Tiền ---
             document.getElementById('withdraw-table').innerHTML = wList.map(h => {
                 let cleanBank = h.uBank ? h.uBank.replace(/'/g, "") : "Chưa cập nhật";
                 return `<tr>
@@ -399,12 +399,13 @@
                         <button class="btn" style="background:#8e44ad; color:white; padding:4px 8px; font-size:10px; width:100%; border-radius:5px;" onclick="showUserQR('${cleanBank}', '${h.amount}')">📱 HIỆN MÃ QR</button>
                     </td>
                     <td><span class="order-id">${h.id}</span></td>
+                    <td>${h.time}</td>
                     <td>
                         <button class="btn btn-success" style="margin-bottom:5px; width:100%;" onclick="processOrder('${h.uPhone}','${h.id}','RUT','Thành công')">Duyệt</button><br>
                         <button class="btn btn-danger" style="width:100%;" onclick="processOrder('${h.uPhone}','${h.id}','RUT','Bị hủy')">Hủy</button>
                     </td>
                 </tr>`;
-            }).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
+            }).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color:#999;">Trống.</td></tr>';
             
             document.getElementById('sys-table').innerHTML = sysList.map(h => `<tr>
                 <td><b>${h.uName}</b><br>${h.uPhone}</td>
