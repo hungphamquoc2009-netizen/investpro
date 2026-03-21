@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký - INVEST PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #121a8f; --bg: #f4f7f6; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #1a202c; }
+        
+        .auth-container { background: white; width: 100%; max-width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); box-sizing: border-box; margin: 20px; }
+        .logo { text-align: center; margin-bottom: 25px; }
+        .logo h1 { margin: 0; color: var(--primary); font-size: 28px; font-weight: 900; letter-spacing: -1px; }
+        .logo p { margin: 5px 0 0 0; font-size: 13px; color: #718096; }
+        
+        .input-group { margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 800; color: #4a5568; margin-bottom: 8px; text-transform: uppercase; }
+        .input-group input { width: 100%; padding: 14px 15px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; box-sizing: border-box; font-family: 'Inter', sans-serif; background: #f8fafc; }
+        .input-group input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(18, 26, 143, 0.1); }
+        
+        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; }
+        .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
+        
+        .auth-links { text-align: center; margin-top: 20px; font-size: 13px; color: #4a5568; }
+        .auth-links a { color: var(--primary); font-weight: 800; text-decoration: none; }
+        
+        .gift-banner { background: #d1fae5; border: 1px dashed #10b981; color: #047857; padding: 10px; border-radius: 10px; text-align: center; font-size: 12px; font-weight: 800; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="logo">
+            <h1>INVEST PRO</h1>
+            <p>Nền tảng đầu tư thông minh</p>
+        </div>
+        
+        <div class="gift-banner">
+            🎁 Tặng ngay 30.000 VNĐ khi đăng ký thành công!
+        </div>
+
+        <div class="input-group">
+            <label>Họ và Tên (Viết hoa không dấu)</label>
+            <input type="text" id="reg-name" placeholder="VD: NGUYEN VAN A">
+        </div>
+        <div class="input-group">
+            <label>Số điện thoại</label>
+            <input type="tel" id="reg-phone" placeholder="Nhập số điện thoại...">
+        </div>
+        <div class="input-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="reg-pass" placeholder="Nhập mật khẩu (từ 6 ký tự)...">
+        </div>
+        <div class="input-group">
+            <label>Mã giới thiệu (Nếu có)</label>
+            <input type="text" id="reg-ref" placeholder="Nhập mã giới thiệu hoặc SĐT người mời">
+        </div>
+        
+        <button class="btn-submit" id="btn-register" onclick="registerAccount()">Đăng Ký Ngay</button>
+        
+        <div class="auth-links">
+            Đã có tài khoản? <a href="dang-nhap.html">Đăng nhập</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLh4yR7q2ymAeIRcnlDdDCNSus4S0gnBQ",
+            authDomain: "investpro-data.firebaseapp.com",
+            projectId: "investpro-data",
+            storageBucket: "investpro-data.firebasestorage.app",
+            messagingSenderId: "91038630825",
+            appId: "1:91038630825:web:fba110e17307e1ad4abab8",
+            measurementId: "G-YBYB26BGKT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.registerAccount = async () => {
+            const name = document.getElementById('reg-name').value.trim().toUpperCase();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const pass = document.getElementById('reg-pass').value.trim();
+            const refCode = document.getElementById('reg-ref').value.trim();
+
+            if (!name || !phone || !pass) {
+                return alert("⚠️ Vui lòng điền đầy đủ Họ Tên, Số điện thoại và Mật khẩu!");
+            }
+            if (pass.length < 6) {
+                return alert("⚠️ Mật khẩu phải có ít nhất 6 ký tự!");
+            }
+
+            const btn = document.getElementById('btn-register');
+            btn.disabled = true;
+            btn.innerText = "Đang xử lý...";
+
+            try {
+                // Kiểm tra xem SĐT đã tồn tại chưa
+                const userRef = doc(db, "users", phone);
+                const userSnap = await getDoc(userRef);
+                
+                if (userSnap.exists()) {
+                    alert("❌ Số điện thoại này đã được đăng ký! Vui lòng đăng nhập.");
+                    btn.disabled = false;
+                    btn.innerText = "Đăng Ký Ngay";
+                    return;
+                }
+
+                // Sinh ID 4 số ngẫu nhiên cho user mới
+                const randomId = Math.floor(1000 + Math.random() * 9000).toString();
+
+                // Tạo lịch sử cộng 30k quà tặng
+                const giftHistory = { 
+                    id: "KM" + Date.now().toString().slice(-6), 
+                    type: "Thưởng đăng ký mới", 
+                    amount: "+30,000 ₫", 
+                    time: new Date().toLocaleString('vi-VN'), 
+                    status: "Thành công", 
+                    color: "#2ecc71" 
+                };
+
+                // Lưu dữ liệu người dùng mới
+                await setDoc(userRef, {
+                    id: randomId,
+                    name: name,
+                    phone: phone,
+                    password: pass,
+                    referredBy: refCode,
+                    balance: 30000,           // Cộng ngay 30K
+                    investments: [],          // Mảng gói đầu tư rỗng
+                    history: [giftHistory],   // Đưa lịch sử quà tặng vào
+                    status: "Chưa kích hoạt",
+                    createdAt: new Date().toLocaleString('vi-VN')
+                });
+
+                alert("✅ Đăng ký thành công! Bạn được tặng 30.000 VNĐ vào tài khoản.");
+                
+                // Tự động đăng nhập và chuyển hướng về trang chủ
+                localStorage.setItem('thongTinTaiKhoan', JSON.stringify({ phone: phone, name: name }));
+                window.location.href = "dashboard.html";
+
+            } catch (error) {
+                console.error(error);
+                alert("❌ Lỗi hệ thống: " + error.message);
+                btn.disabled = false;
+                btn.innerText = "Đăng Ký Ngay";
+            }
+        };
+    </script>
+</body>
+</html>
