@@ -449,11 +449,17 @@
         window.loadTeamData = async () => {
             if (!currentUser) return;
             try {
+                // ĐÃ SỬA: Hàm nhận diện nạp tiền linh hoạt hơn
                 const getDeposit = (u) => {
                     let dep = 0;
                     (u.history || []).forEach(h => {
-                        if(h.type === "Nạp tiền hệ thống" && h.status === "Thành công") {
-                            dep += Number(h.amount.replace(/[^0-9]/g, ''));
+                        let typeStr = (h.type || "").toLowerCase();
+                        let statusStr = (h.status || "").toLowerCase();
+                        
+                        // Kiểm tra nếu loại giao dịch chứa chữ "nạp" và trạng thái chứa "thành công"
+                        if(typeStr.includes("nạp") && statusStr.includes("thành công")) {
+                            let amountStr = String(h.amount || "0");
+                            dep += Number(amountStr.replace(/[^0-9]/g, ''));
                         }
                     });
                     return dep;
