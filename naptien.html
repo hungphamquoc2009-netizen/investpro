@@ -122,7 +122,7 @@
         window.goToPayment = () => {
             const inputVal = document.getElementById('custom-amount').value;
             if(inputVal) selectedAmount = Number(inputVal);
-            if(selectedAmount < 30000) return alert("Vui lòng nạp tối thiểu 30,000₫");
+            if(selectedAmount < 60000) return alert("Vui lòng nạp tối thiểu 60,000₫");
             
             if(!adminBank || !adminBank.name) {
                 return alert("🔴 LỖI: Hệ thống chưa cấu hình ngân hàng. Vui lòng quay lại sau!");
