@@ -154,17 +154,33 @@
         <div id="my-packages-list"></div>
     </div>
 
-    <div id="page-invite" class="page">
+  <div id="page-invite" class="page">
         <div style="background:var(--orange); color:white; padding:20px; border-radius:20px; text-align:center; box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3); margin-bottom: 20px;">
             <p style="margin: 0 0 10px 0; font-size: 13px; opacity: 0.9;">Mã giới thiệu của bạn</p>
             <h1 id="m-code" style="margin:0; font-size: 32px; letter-spacing: 2px;">0000</h1>
             <button onclick="copyCode()" style="background: white; color: var(--orange); border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; margin-top: 15px;">Sao chép mã</button>
         </div>
+
+        <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); border: 1px solid #e2e8f0;">
+            <h4 style="margin: 0 0 12px 0; color: #1a202c; font-size: 14px; text-align: center;">Chính Sách Hoa Hồng Đội Nhóm</h4>
+            <div style="font-size: 13px; color: #4a5568; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #edf2f7; padding-bottom: 5px;">
+                    <span>🥇 Người bạn trực tiếp mời (F1)</span><strong style="color: #e65100;">30%</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #edf2f7; padding-bottom: 5px;">
+                    <span>🥈 Người do F1 mời (F2)</span><strong style="color: #e65100;">3%</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>🥉 Người do F2 mời (F3)</span><strong style="color: #e65100;">1%</strong>
+                </div>
+            </div>
+        </div>
+
         <div class="stats-container">
-            <div class="stats-box"><div>Tổng số F1</div><div class="val" id="total-f1-count">0</div></div>
+            <div class="stats-box"><div>Tổng đội nhóm</div><div class="val" id="total-f1-count">0</div></div>
             <div class="stats-box"><div>Tổng hoa hồng</div><div class="val" id="total-commission">0 ₫</div></div>
         </div>
-        <h4 style="margin: 20px 0 10px 5px; color: #333;">👥 Danh sách F1 & Hoa hồng</h4>
+        <h4 style="margin: 20px 0 10px 5px; color: #333;">👥 Danh sách & Hoa hồng</h4>
         <div id="f1-list-container"></div>
     </div>
 
