@@ -65,6 +65,26 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lấy tham số 'ref' từ thanh URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+
+            // Nếu tìm thấy mã ref trên URL
+            if (refCode) {
+                const refInput = document.getElementById('reg-ref');
+                if (refInput) {
+                    refInput.value = refCode; // Điền mã vào ô
+                    refInput.readOnly = true; // Khóa không cho sửa
+                    refInput.style.backgroundColor = '#e2e8f0'; // Đổi màu nền để nhận biết
+                    refInput.style.color = '#1a202c';
+                    refInput.style.fontWeight = 'bold';
+                }
+            }
+        });
+    </script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -130,7 +150,7 @@
                     name: name,
                     phone: phone,
                     password: pass,
-                    referredBy: refCode,
+                    referredBy: refCode, // <-- Mã giới thiệu tự điền sẽ được lưu vào DB ở đây
                     balance: 30000,           // Cộng ngay 30K
                     investments: [],          // Mảng gói đầu tư rỗng
                     history: [giftHistory],   // Đưa lịch sử quà tặng vào
