@@ -385,6 +385,7 @@
             } catch(e) { console.log(e); }
         }
 
+        // --- ĐÃ SỬA: CẬP NHẬT TRẠNG THÁI "ĐÃ KÍCH HOẠT" SAU KHI MUA GÓI THÀNH CÔNG ---
         window.buyProduct = async (id, price, name, rate) => {
             if(!currentUser) return;
             if(currentUser.balance < price) return alert("Không đủ số dư, vui lòng nạp thêm!");
@@ -397,8 +398,16 @@
                     const newHistory = { id: "IN"+Date.now().toString().slice(-6), type: "Đầu tư: "+name, amount: "-" + price.toLocaleString() + " ₫", time: new Date().toLocaleString('vi-VN'), status: "Thành công", color: "red" };
                     const history = currentUser.history || [];
                     history.unshift(newHistory);
-                    await updateDoc(doc(db, "users", currentUser.phone), { balance: newBalance, investments: investments, history: history });
-                    alert("Đầu tư thành công!");
+                    
+                    // Thêm dòng status: "Đã kích hoạt" để cập nhật lên Firebase
+                    await updateDoc(doc(db, "users", currentUser.phone), { 
+                        balance: newBalance, 
+                        investments: investments, 
+                        history: history,
+                        status: "Đã kích hoạt" 
+                    });
+                    
+                    alert("Đầu tư thành công! Tài khoản của bạn đã được kích hoạt.");
                 } catch(e) { alert("Lỗi khi mua gói!"); }
             }
         };
