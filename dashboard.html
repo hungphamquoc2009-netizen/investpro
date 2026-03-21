@@ -56,9 +56,18 @@
         .pc-btn { width: 100%; background: #6366f1; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
         .pc-btn:active { transform: scale(0.98); background: #4f46e5; }
         
-        .stats-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .stats-container { display: flex; gap: 10px; margin-bottom: 15px; }
         .stats-box { flex: 1; background: white; padding: 15px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .stats-box .val { font-size: 20px; font-weight: 800; color: var(--primary); margin-top: 5px; }
+        
+        /* Box nhận hoa hồng mới */
+        .claim-box { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; }
+        .claim-box-title { font-size: 13px; color: #718096; margin-bottom: 5px; font-weight: 600; }
+        .claim-box-val { font-size: 24px; font-weight: 900; color: #10b981; margin-bottom: 15px; }
+        .btn-claim { background: #10b981; color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; transition: 0.3s; }
+        .btn-claim:active { transform: scale(0.98); background: #059669; }
+        .btn-claim:disabled { background: #cbd5e1; cursor: not-allowed; }
+
         .f1-item { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
         .f1-name { font-weight: bold; color: #333; font-size: 14px; }
         .f1-phone { font-size: 11px; color: #888; margin-top: 3px; }
@@ -180,6 +189,13 @@
             <div class="stats-box"><div>Tổng đội nhóm</div><div class="val" id="total-f1-count">0</div></div>
             <div class="stats-box"><div>Tổng hoa hồng</div><div class="val" id="total-commission">0 ₫</div></div>
         </div>
+
+        <div class="claim-box">
+            <div class="claim-box-title">🎁 Hoa hồng mới chưa nhận</div>
+            <div class="claim-box-val" id="available-commission">0 ₫</div>
+            <button class="btn-claim" id="btn-claim-comm" onclick="claimCommission()">Chuyển vào Số dư</button>
+        </div>
+
         <h4 style="margin: 20px 0 10px 5px; color: #333;">👥 Danh sách & Hoa hồng</h4>
         <div id="f1-list-container"></div>
     </div>
@@ -232,12 +248,11 @@
         let currentUser = null;
         let profitInterval;
         let teamDataLoaded = false;
+        window.currentAvailableCommission = 0; // Biến lưu trữ hoa hồng chưa nhận
 
-        // TIỆN ÍCH CHUNG
         window.closeNotice = () => document.getElementById('notice-modal').style.display = 'none';
         window.logout = () => { localStorage.removeItem('thongTinTaiKhoan'); window.location.href = 'dang-nhap.html'; };
         
-        // --- ĐÃ SỬA: HÀM SAO CHÉP TẠO LINK MỜI TỰ ĐỘNG ---
         window.copyCode = () => { 
             const code = document.getElementById('m-code').innerText;
             const inviteLink = window.location.origin + "/dang-ky.html?ref=" + code; 
@@ -257,13 +272,11 @@
             
             if(id !== 'packages' && profitInterval) clearInterval(profitInterval);
 
-            // Cập nhật lại dữ liệu đội nhóm khi nhấn vào tab Giới thiệu
             if(id === 'invite') {
                 window.loadTeamData();
             }
         };
 
-        // HÀM MỞ CSKH (Đọc link từ localStorage do Admin cài)
         window.openCSKH = async () => {
             try {
                 const snap = await getDoc(doc(db, "config", "notice"));
@@ -275,7 +288,6 @@
             } catch (e) { console.log("Lỗi tải link CSKH:", e); }
         };
 
-        // POPUP CẬP NHẬT THÔNG TIN
         window.openUpdateModal = () => {
             if(currentUser) {
                 document.getElementById('edit-name').value = currentUser.name || '';
@@ -393,7 +405,7 @@
 
         window.showMyPackages = () => {
             changePage('packages', null);
-            if (profitInterval) clearInterval(profitInterval); // Sửa lỗi rò rỉ bộ nhớ
+            if (profitInterval) clearInterval(profitInterval);
             
             const container = document.getElementById('my-packages-list');
             if(!currentUser || !currentUser.investments || currentUser.investments.length === 0) {
@@ -449,14 +461,11 @@
         window.loadTeamData = async () => {
             if (!currentUser) return;
             try {
-                // ĐÃ SỬA: Hàm nhận diện nạp tiền linh hoạt hơn
                 const getDeposit = (u) => {
                     let dep = 0;
                     (u.history || []).forEach(h => {
                         let typeStr = (h.type || "").toLowerCase();
                         let statusStr = (h.status || "").toLowerCase();
-                        
-                        // Kiểm tra nếu loại giao dịch chứa chữ "nạp" và trạng thái chứa "thành công"
                         if(typeStr.includes("nạp") && statusStr.includes("thành công")) {
                             let amountStr = String(h.amount || "0");
                             dep += Number(amountStr.replace(/[^0-9]/g, ''));
@@ -485,7 +494,6 @@
                 let countTotal = 0;
                 let htmlList = '';
 
-                // Hàm gom tất cả các trường hợp mã mời (Số điện thoại, ID chữ, ID số)
                 const getPossibleCodes = (userObj) => {
                     let codes = [];
                     if (userObj.phone) codes.push(String(userObj.phone));
@@ -494,10 +502,9 @@
                         if (!isNaN(userObj.id)) codes.push(Number(userObj.id));
                     }
                     if (codes.length === 0) codes.push("INVALID_999");
-                    return [...new Set(codes)]; // Lọc các giá trị trùng nhau
+                    return [...new Set(codes)];
                 };
 
-                // LẤY F1
                 let myCodes = getPossibleCodes(currentUser);
                 const qF1 = query(collection(db, "users"), where("referredBy", "in", myCodes));
                 const snapF1 = await getDocs(qF1);
@@ -506,11 +513,10 @@
 
                 for (let f1 of f1Docs) {
                     let dep1 = getDeposit(f1);
-                    let comm1 = dep1 * 0.30; // 30% cho F1
+                    let comm1 = dep1 * 0.30; 
                     totalCommission += comm1;
                     htmlList += renderRow(f1, 'F1', dep1, comm1);
 
-                    // LẤY F2
                     let f1Codes = getPossibleCodes(f1);
                     const qF2 = query(collection(db, "users"), where("referredBy", "in", f1Codes));
                     const snapF2 = await getDocs(qF2);
@@ -519,11 +525,10 @@
 
                     for (let f2 of f2Docs) {
                         let dep2 = getDeposit(f2);
-                        let comm2 = dep2 * 0.03; // 3% cho F2
+                        let comm2 = dep2 * 0.03; 
                         totalCommission += comm2;
                         htmlList += renderRow(f2, 'F2', dep2, comm2);
 
-                        // LẤY F3
                         let f2Codes = getPossibleCodes(f2);
                         const qF3 = query(collection(db, "users"), where("referredBy", "in", f2Codes));
                         const snapF3 = await getDocs(qF3);
@@ -532,7 +537,7 @@
 
                         for (let f3 of f3Docs) {
                             let dep3 = getDeposit(f3);
-                            let comm3 = dep3 * 0.01; // 1% cho F3
+                            let comm3 = dep3 * 0.01; 
                             totalCommission += comm3;
                             htmlList += renderRow(f3, 'F3', dep3, comm3);
                         }
@@ -550,8 +555,67 @@
                 document.getElementById('total-commission').innerText = totalCommission.toLocaleString() + " ₫";
                 document.getElementById('hs-profit').innerText = totalCommission.toLocaleString() + " VNĐ";
                 
+                // --- TÍNH TOÁN HOA HỒNG CHƯA NHẬN ---
+                let claimed = Number(currentUser.claimedCommission || 0);
+                window.currentAvailableCommission = totalCommission - claimed;
+                if(window.currentAvailableCommission < 0) window.currentAvailableCommission = 0;
+                
+                document.getElementById('available-commission').innerText = window.currentAvailableCommission.toLocaleString() + " ₫";
+                
+                const btnClaim = document.getElementById('btn-claim-comm');
+                if(window.currentAvailableCommission <= 0) {
+                    btnClaim.disabled = true;
+                    btnClaim.innerText = "Không có hoa hồng mới";
+                } else {
+                    btnClaim.disabled = false;
+                    btnClaim.innerText = "Chuyển vào Số dư";
+                }
+
                 teamDataLoaded = true;
             } catch(e) { console.log("Lỗi tải đội nhóm:", e); }
+        };
+
+        // --- HÀM RÚT HOA HỒNG ---
+        window.claimCommission = async () => {
+            if(!currentUser) return;
+            if(window.currentAvailableCommission <= 0) {
+                return alert("Bạn không có hoa hồng mới để nhận!");
+            }
+            if(confirm(`Xác nhận chuyển ${window.currentAvailableCommission.toLocaleString()} ₫ hoa hồng vào số dư chính của bạn?`)) {
+                const btn = document.getElementById('btn-claim-comm');
+                btn.disabled = true;
+                btn.innerText = "Đang xử lý...";
+                try {
+                    let amountToClaim = window.currentAvailableCommission;
+                    let newBalance = Number(currentUser.balance || 0) + amountToClaim;
+                    let newClaimed = Number(currentUser.claimedCommission || 0) + amountToClaim;
+
+                    const newHistory = { 
+                        id: "HH"+Date.now().toString().slice(-6), 
+                        type: "Nhận hoa hồng đội nhóm", 
+                        amount: "+" + amountToClaim.toLocaleString() + " ₫", 
+                        time: new Date().toLocaleString('vi-VN'), 
+                        status: "Thành công", 
+                        color: "green" 
+                    };
+                    const history = currentUser.history || [];
+                    history.unshift(newHistory);
+
+                    await updateDoc(doc(db, "users", currentUser.phone), { 
+                        balance: newBalance, 
+                        claimedCommission: newClaimed,
+                        history: history 
+                    });
+
+                    alert("✅ Đã cộng hoa hồng vào số dư thành công!");
+                    window.loadTeamData(); // Cập nhật lại giao diện
+                } catch(e) {
+                    console.log(e);
+                    alert("❌ Lỗi khi nhận hoa hồng!");
+                    btn.disabled = false;
+                    btn.innerText = "Chuyển vào Số dư";
+                }
+            }
         };
 
         function listenUserData(phone) {
@@ -580,8 +644,10 @@
                     const totalWithdrawn = (currentUser.history || []).reduce((sum, h) => { if(h.type.includes("Rút tiền") && h.status === "Thành công") return sum + Number(h.amount.replace(/[^0-9]/g, '')); return sum; }, 0);
                     document.getElementById('hs-withdrawn').innerText = totalWithdrawn.toLocaleString() + " VNĐ";
 
-                    // Chạy Load Team Data 1 lần lúc mới vào app để cập nhật số "Tổng Lợi Nhuận" ở trang chủ
                     if (!teamDataLoaded) {
+                        window.loadTeamData();
+                    } else if (document.getElementById('page-invite').classList.contains('active')) {
+                        // Cập nhật hoa hồng realtime nếu đang ở tab Giới thiệu
                         window.loadTeamData();
                     }
 
