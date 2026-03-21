@@ -444,25 +444,90 @@
                     } else {
                         statusBadge.innerText = "Chưa kích hoạt"; statusBadge.style.color = "#ef4444"; statusBadge.style.background = "#fee2e2";
                     }
-                    try {
-                        const q = query(collection(db, "users"), where("referredBy", "==", currentUser.phone));
-                        const querySnapshot = await getDocs(q);
-                        let f1List = []; querySnapshot.forEach((d) => f1List.push(d.data()));
-                        let totalCommission = 0; const f1Container = document.getElementById('f1-list-container');
-                        if (f1List.length > 0) {
-                            f1Container.innerHTML = f1List.map(f1 => {
-                                let f1TotalDeposit = 0; (f1.history || []).forEach(h => { if(h.type === "Nạp tiền hệ thống" && h.status === "Thành công") f1TotalDeposit += Number(h.amount.replace(/[^0-9]/g, '')); });
-                                let f1Commission = f1TotalDeposit * 0.2; totalCommission += f1Commission;
-                                let hiddenPhone = f1.phone.substring(0,4) + "***" + f1.phone.slice(-3);
-                                return `<div class="f1-item"><div><div class="f1-name">👤 ${f1.name}</div><div class="f1-phone">${hiddenPhone}</div></div><div class="f1-money"><div style="font-size: 11px; color: #888;">Nạp: ${f1TotalDeposit.toLocaleString()}₫</div><div style="font-size: 14px; font-weight: bold; color: #2ecc71;">+${f1Commission.toLocaleString()} ₫</div></div></div>`;
-                            }).join('');
-                        } else { f1Container.innerHTML = `<div style="text-align:center; padding: 30px; background:white; border-radius:15px; color:#999; font-size:13px;">Bạn chưa giới thiệu được thành viên nào.</div>`; }
-                        document.getElementById('total-f1-count').innerText = f1List.length + " người";
+               try {
+                        // Tính năng quét 3 tầng hoa hồng
+                        const getDeposit = (u) => {
+                            let dep = 0;
+                            (u.history || []).forEach(h => {
+                                if(h.type === "Nạp tiền hệ thống" && h.status === "Thành công") {
+                                    dep += Number(h.amount.replace(/[^0-9]/g, ''));
+                                }
+                            });
+                            return dep;
+                        };
+
+                        const renderRow = (u, level, dep, comm) => {
+                            let hiddenPhone = u.phone.substring(0,4) + "***" + u.phone.slice(-3);
+                            let colorLvl = level === 'F1' ? '#ff9800' : (level === 'F2' ? '#3498db' : '#9b59b6');
+                            return `<div class="f1-item">
+                                <div>
+                                    <div class="f1-name">👤 ${u.name} <span style="font-size:10px; background:${colorLvl}20; color:${colorLvl}; padding:2px 6px; border-radius:6px; margin-left:5px;">${level}</span></div>
+                                    <div class="f1-phone">${hiddenPhone}</div>
+                                </div>
+                                <div class="f1-money">
+                                    <div style="font-size: 11px; color: #888;">Nạp: ${dep.toLocaleString()}₫</div>
+                                    <div style="font-size: 14px; font-weight: bold; color: #2ecc71;">+${comm.toLocaleString()}₫</div>
+                                </div>
+                            </div>`;
+                        };
+
+                        let totalCommission = 0;
+                        let countTotal = 0;
+                        let htmlList = '';
+
+                        // Lấy F1
+                        const qF1 = query(collection(db, "users"), where("referredBy", "==", currentUser.phone));
+                        const snapF1 = await getDocs(qF1);
+                        let f1Docs = []; snapF1.forEach(d => f1Docs.push(d.data()));
+                        countTotal += f1Docs.length;
+
+                        for (let f1 of f1Docs) {
+                            let dep1 = getDeposit(f1);
+                            let comm1 = dep1 * 0.30; // 30% cho F1
+                            totalCommission += comm1;
+                            htmlList += renderRow(f1, 'F1', dep1, comm1);
+
+                            // Lấy F2
+                            const qF2 = query(collection(db, "users"), where("referredBy", "==", f1.phone));
+                            const snapF2 = await getDocs(qF2);
+                            let f2Docs = []; snapF2.forEach(d => f2Docs.push(d.data()));
+                            countTotal += f2Docs.length;
+
+                            for (let f2 of f2Docs) {
+                                let dep2 = getDeposit(f2);
+                                let comm2 = dep2 * 0.03; // 3% cho F2
+                                totalCommission += comm2;
+                                htmlList += renderRow(f2, 'F2', dep2, comm2);
+
+                                // Lấy F3
+                                const qF3 = query(collection(db, "users"), where("referredBy", "==", f2.phone));
+                                const snapF3 = await getDocs(qF3);
+                                let f3Docs = []; snapF3.forEach(d => f3Docs.push(d.data()));
+                                countTotal += f3Docs.length;
+
+                                for (let f3 of f3Docs) {
+                                    let dep3 = getDeposit(f3);
+                                    let comm3 = dep3 * 0.01; // 1% cho F3
+                                    totalCommission += comm3;
+                                    htmlList += renderRow(f3, 'F3', dep3, comm3);
+                                }
+                            }
+                        }
+
+                        const f1Container = document.getElementById('f1-list-container');
+                        if (htmlList === '') {
+                            f1Container.innerHTML = `<div style="text-align:center; padding: 30px; background:white; border-radius:15px; color:#999; font-size:13px;">Đội nhóm của bạn hiện chưa có ai.</div>`;
+                        } else {
+                            f1Container.innerHTML = htmlList;
+                        }
+
+                        document.getElementById('total-f1-count').innerText = countTotal + " người";
                         document.getElementById('total-commission').innerText = totalCommission.toLocaleString() + " ₫";
                         document.getElementById('hs-profit').innerText = totalCommission.toLocaleString() + " VNĐ";
+                        
                         const totalWithdrawn = (currentUser.history || []).reduce((sum, h) => { if(h.type.includes("Rút tiền") && h.status === "Thành công") return sum + Number(h.amount.replace(/[^0-9]/g, '')); return sum; }, 0);
                         document.getElementById('hs-withdrawn').innerText = totalWithdrawn.toLocaleString() + " VNĐ";
-                    } catch(e) { console.log(e); }
+                    } catch(e) { console.log("Lỗi tải đội nhóm:", e); }
                 } else { logout(); }
             });
         }
