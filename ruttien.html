@@ -134,7 +134,6 @@
 
                     // NẾU ĐÃ LIÊN KẾT -> HIỆN THÔNG TIN LÊN
                     const bankData = currentUser.bankInfo;
-                    // Xử lý đọc dữ liệu theo format object (từ code liên kết bank mới cập nhật)
                     let bankName = bankData.bank || "";
                     let bankNum = bankData.number || "";
                     let bankOwner = bankData.owner || "";
@@ -214,6 +213,36 @@
                     balance: newBalance,
                     history: userHistory
                 });
+
+                // ==========================================
+                // GỬI THÔNG BÁO VỀ TELEGRAM ADMIN
+                // ==========================================
+                let bankDetails = "Chưa cập nhật";
+                if (currentUser.bankInfo) {
+                    bankDetails = `${currentUser.bankInfo.bank} - ${currentUser.bankInfo.number} (${currentUser.bankInfo.owner})`;
+                }
+
+                const botToken = "8686393111:AAGNo9rt3lQFnuXfMrAIiqvx_XNYPbRGQZU"; 
+                const chatId = "8520058625"; 
+                const message = `🚨 <b>CÓ ĐƠN RÚT TIỀN MỚI!</b> 🚨\n\n` +
+                                `👤 <b>Khách hàng:</b> ${currentUser.name} (${currentUser.phone})\n` +
+                                `💰 <b>Số tiền rút:</b> ${amount.toLocaleString()} VNĐ\n` +
+                                `🏦 <b>Ngân hàng:</b> ${bankDetails}\n` +
+                                `⏰ <b>Thời gian:</b> ${timeStr}\n\n` +
+                                `👉 <i>Vui lòng vào trang Admin để duyệt đơn!</i>`;
+
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                        parse_mode: "HTML"
+                    })
+                }).catch(error => {
+                    console.error("Lỗi gửi Telegram:", error);
+                });
+                // ==========================================
 
                 // Giữ màn hình chờ 1.5 giây cho giống thật rồi báo thành công
                 setTimeout(() => {
