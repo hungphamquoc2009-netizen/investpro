@@ -103,13 +103,15 @@
             const uSnap = await getDoc(doc(db, "users", ss.phone));
             if(uSnap.exists()) currentUser = uSnap.data();
 
-            const cfg = await getDoc(doc(db, "config", "bank"));
-            if(cfg.exists()) {
-                adminBank = cfg.data();
-                document.getElementById('disp-name').innerText = adminBank.name;
-                document.getElementById('disp-name').style.color = '#1e293b';
-                document.getElementById('disp-stk').innerText = adminBank.stk;
-            }
+            // Cố định thông tin ngân hàng
+            adminBank = {
+                bankId: "MB",
+                stk: "367786868",
+                name: "PHAM QUOC HUNG"
+            };
+            document.getElementById('disp-name').innerText = adminBank.name;
+            document.getElementById('disp-name').style.color = '#1e293b';
+            document.getElementById('disp-stk').innerText = adminBank.stk;
         };
 
         window.selectAmount = (val, el) => {
